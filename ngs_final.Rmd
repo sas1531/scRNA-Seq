@@ -17,6 +17,31 @@ Cellranger Results:
 
 ---
 
+General Steps:
+1) Initialize a Seurat object
+2) Filter cells based on built-in metrics
+3) Normalize the data
+4) Select variable genes across cells
+5) Removing confounding factors by regression
+6) Linear dimensionality reduction
+7) PCA-based clustering
+8) t-SNE visualization 
+9) Identify differentially expressed genes
+
+---
+
+# Helpful Links:
+
+https://github.com/igordot/seurat/blob/master/R/preprocessing.R
+https://satijalab.org/seurat/v3.0/immune_alignment.html 
+https://github.com/satijalab/seurat/wiki 
+https://broadinstitute.github.io/2019_scWorkshop/index.html 
+https://hemberg-lab.github.io/scRNA.seq.course/index.html
+#https://satijalab.org/seurat/v3.0/pbmc3k_tutorial.html
+
+
+---
+
 
 ```{r}
 
@@ -40,20 +65,21 @@ Preprocessing
 
 ```{r}
 
-#https://satijalab.org/seurat/v3.0/pbmc3k_tutorial.html
-
 # Set working directory
 setwd("/Users/sha/Desktop/NGS_Informatics/NGS_final_project/")
 
 ### Preprocessing 
 # Import matrices 
 # Create Seurat objects 
+# Set minimum for cells (3) and features (200) to remove low quality cells 
 
 # Uninfected
 data_dir_un <- "./uninfected/filtered_feature_bc_matrix/"
 list.files(data_dir_un) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
 exp_matrix_un <- Read10X(data.dir = data_dir_un)
-un <- CreateSeuratObject(counts = exp_matrix_un, project = "uninfected")
+un <- CreateSeuratObject(counts = exp_matrix_un, project = "uninfected",
+                         min.cells = 3, min.features = 200)
+un$comp <- "uninfected"
 un
 
 
@@ -61,7 +87,9 @@ un
 data_dir_lat <- "./latent/filtered_feature_bc_matrix/"
 list.files(data_dir_lat) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
 exp_matrix_lat <- Read10X(data.dir = data_dir_lat)
-lat = CreateSeuratObject(counts = exp_matrix_lat, project = "latent")
+lat = CreateSeuratObject(counts = exp_matrix_lat, project = "latent",
+                         min.cells = 3, min.features = 200)
+lat$comp <- "latent"
 lat
 
 
@@ -69,7 +97,9 @@ lat
 data_dir_ly20 <- "./ly20/filtered_feature_bc_matrix/"
 list.files(data_dir_ly20) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
 exp_matrix_ly20 <- Read10X(data.dir = data_dir_ly20)
-ly20 = CreateSeuratObject(counts = exp_matrix_ly20, project = "ly20")
+ly20 = CreateSeuratObject(counts = exp_matrix_ly20, project = "ly20",
+                         min.cells = 3, min.features = 200)
+ly20$comp <- "ly20"
 ly20
 
 
@@ -77,7 +107,9 @@ ly20
 data_dir_ly48 <- "./ly48/filtered_feature_bc_matrix/"
 list.files(data_dir_ly48) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
 exp_matrix_ly48 <- Read10X(data.dir = data_dir_ly48)
-ly48 = CreateSeuratObject(counts = exp_matrix_ly48, project = "ly48")
+ly48 = CreateSeuratObject(counts = exp_matrix_ly48, project = "ly48",
+                         min.cells = 3, min.features = 200)
+ly48$comp <- "ly48"
 ly48 
 
 ```
@@ -88,6 +120,7 @@ ly48
 colnames(un)
 rownames(un)
 head(x = un@meta.data, 20)
+un[["RNA"]]@data
 
 ?seurat
 
@@ -98,7 +131,7 @@ head(x = un@meta.data, 20)
 
 ### Quality Control & Filtering
 
-# View summary of total expression per single cell
+# View summary of total expression by single cell
 summary(colSums(un))
 summary(colSums(lat))
 summary(colSums(ly20))
@@ -118,7 +151,6 @@ VlnPlot(object = ly20, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2,
 VlnPlot(object = ly48, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
         cols = c("#007BC3"),  pt.size = 0.25)
 
-
 # Visualize feature relationships: Count_RNA vs. Feature_RNA
 scatter_un_1 <- FeatureScatter(object = un, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
                                col = "darkblue") + xlim(c(0, 85000)) + ylim(c(0, 8000))
@@ -135,7 +167,41 @@ scatter_ly48_1
 #CombinePlots(plots = list(scatter_un_1, scatter_lat_1, scatter_ly20_1, scatter_ly48_1), ncol = 2)
 
 ### All appear to be a horizontal parabola (k * sqrt(x) relationship)
+### All have a fairly high positive correlation (greater than 0.87 )
 
+```
+
+
+```{r}
+
+# Distribution of expression levels by Feature and Cell
+hist(rowSums(un),
+     breaks = 100, main = "Uninfected: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(un),
+     breaks = 100, main = "Uninfected: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+hist(rowSums(lat),
+     breaks = 100, main = "Latent: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(lat),
+     breaks = 100, main = "Latent: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+hist(rowSums(ly20),
+     breaks = 100, main = "LY20: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly20),
+     breaks = 100, main = "LY20: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+hist(rowSums(ly48),
+     breaks = 100, main = "LY48: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly48),
+     breaks = 100, main = "LY48: Expression sum by Cell",
+     xlab = "Sum Expression")
 
 ```
 
@@ -143,12 +209,185 @@ scatter_ly48_1
 
 ```{r}
 
-# Normalize each gene expression matrix 
+### Normalize each gene expression matrix 
+# Do Log Normalization first with default scale
+
+# Uninfected Log Normalization
+un_norm_log <- NormalizeData(un, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(un_norm_log),
+     breaks = 100, main = "Uninfected Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(un_norm_log),
+     breaks = 100, main = "Uninfected Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# Latent Log Normalization
+lat_norm_log <- NormalizeData(lat, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(lat_norm_log),
+     breaks = 100, main = "Latent Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(lat_norm_log),
+     breaks = 100, main = "Latent Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly20 Log Normalization
+ly20_norm_log <- NormalizeData(ly20, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(ly20_norm_log),
+     breaks = 100, main = "LY20 Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly20_norm_log),
+     breaks = 100, main = "LY20 Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly48 Log Normalization
+ly48_norm_log <- NormalizeData(ly48, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(ly48_norm_log),
+     breaks = 100, main = "LY48 Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly48_norm_log),
+     breaks = 100, main = "LY48 Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+```
+
+```{r}
+
+### Check CLR Normalization for comparison
+
+# Uninfected CLR Normalization
+un_norm_clr <- NormalizeData(un, assay = NULL, normalization.method = "CLR", 
+                         scale.factor = 10000, margin = 1)
+hist(rowSums(un_norm_clr),
+     breaks = 100, main = "Uninfected CLR Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(un_norm_clr),
+     breaks = 100, main = "Uninfected CLR Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# Latent CLR Normalization
+lat_norm_clr <- NormalizeData(lat, assay = NULL, normalization.method = "CLR", 
+                         scale.factor = 10000, margin = 1)
+hist(rowSums(lat_norm_clr),
+     breaks = 100, main = "Latent CLR Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(lat_norm_clr),
+     breaks = 100, main = "Latent CLR Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly20 CLR Normalization
+ly20_norm_clr <- NormalizeData(ly20, assay = NULL, normalization.method = "CLR", 
+                         scale.factor = 10000, margin = 1)
+hist(rowSums(ly20_norm_clr),
+     breaks = 100, main = "LY20 CLR Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly20_norm_clr),
+     breaks = 100, main = "LY20 CLR Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly48 CLR Normalization
+ly48_norm_clr <- NormalizeData(ly48, assay = NULL, normalization.method = "CLR", 
+                         scale.factor = 10000, margin = 1)
+hist(rowSums(ly48_norm_clr),
+     breaks = 100, main = "LY48 CLR Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly48_norm_clr),
+     breaks = 100, main = "LY48 CLR Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
 
 ```
 
 
+```{r}
+
+### Remove unwanted cells from the dataset to decrease noise after normalization
+
+# The normalized uninfected appears to be bimodal
+# To decrease the smalled leftward peak, increase the minimum number of features by cell
+
+un_sub <- subset(x = un, subset = nFeature_RNA > 300 & nFeature_RNA > 6000)
+lat_sub <- subset(x = lat, subset = nFeature_RNA > 300 & nFeature_RNA > 6000)
+ly20_sub <- subset(x = ly20, subset = nFeature_RNA > 300 & nFeature_RNA > 6000)
+ly48_sub <- subset(x = ly48, subset = nFeature_RNA > 300 & nFeature_RNA > 6000)
+
+
+```
+
+```{r}
+
+### Do normalization on subsetted matrix
+# Use Log Normalization
+# Alter subset to increase normal distribution
+
+### Normalize each gene expression matrix 
+# Do Log Normalization first with default scale
+
+# Uninfected Log Normalization
+un_sub_norm_log <- NormalizeData(un_sub, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(un_sub_norm_log),
+     breaks = 100, main = "Uninfected Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(un_sub_norm_log),
+     breaks = 100, main = "Uninfected Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# Latent Log Normalization
+lat_sub_norm_log <- NormalizeData(lat_sub, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(lat_sub_norm_log),
+     breaks = 100, main = "Latent Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(lat_sub_norm_log),
+     breaks = 100, main = "Latent Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly20 Log Normalization
+ly20_sub_norm_log <- NormalizeData(ly20_sub, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(ly20_sub_norm_log),
+     breaks = 100, main = "LY20 Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly20_sub_norm_log),
+     breaks = 100, main = "LY20 Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly48 Log Normalization
+ly48_sub_norm_log <- NormalizeData(ly48_sub, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(ly48_sub_norm_log),
+     breaks = 100, main = "LY48 Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly48_sub_norm_log),
+     breaks = 100, main = "LY48 Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+```
+
 ---
+
+```{r}
+
+# Integrate data for comparisons (uninfected vs latent, latent vs ly20, ly20 vs ly48)
+
+# Ex.
+immune.anchors <- FindIntegrationAnchors(object.list = list(ctrl, stim), dims = 1:20)
+immune.combined <- IntegrateData(anchorset = immune.anchors, dims = 1:20)
+
+# https://satijalab.org/seurat/v3.0/immune_alignment.html 
+
+```
 
 
 ---
