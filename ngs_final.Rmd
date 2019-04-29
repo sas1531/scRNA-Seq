@@ -1,0 +1,157 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+---
+
+Shaleigh Smith
+NGS Final
+
+---
+
+Cellranger Results:
+- Unfiltered: Contains every barcode from fixed list of known-good barcode sequences. This includes background and cell associated barcodes.
+- Filtered: Contains only detected cellular barcodes.
+
+---
+
+
+```{r}
+
+# Load libraries
+library(tidyverse)
+library(dplyr)
+library(Matrix)
+library(devtools)
+library(Seurat)
+
+```
+
+
+---
+
+
+Preprocessing
+
+---
+
+
+```{r}
+
+#https://satijalab.org/seurat/v3.0/pbmc3k_tutorial.html
+
+# Set working directory
+setwd("/Users/sha/Desktop/NGS_Informatics/NGS_final_project/")
+
+### Preprocessing 
+# Import matrices 
+# Create Seurat objects 
+
+# Uninfected
+data_dir_un <- "./uninfected/filtered_feature_bc_matrix/"
+list.files(data_dir_un) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_un <- Read10X(data.dir = data_dir_un)
+un <- CreateSeuratObject(counts = exp_matrix_un, project = "uninfected")
+un
+
+
+# Latent
+data_dir_lat <- "./latent/filtered_feature_bc_matrix/"
+list.files(data_dir_lat) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_lat <- Read10X(data.dir = data_dir_lat)
+lat = CreateSeuratObject(counts = exp_matrix_lat, project = "latent")
+lat
+
+
+# Ly20
+data_dir_ly20 <- "./ly20/filtered_feature_bc_matrix/"
+list.files(data_dir_ly20) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_ly20 <- Read10X(data.dir = data_dir_ly20)
+ly20 = CreateSeuratObject(counts = exp_matrix_ly20, project = "ly20")
+ly20
+
+
+# Uninfected
+data_dir_ly48 <- "./ly48/filtered_feature_bc_matrix/"
+list.files(data_dir_ly48) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_ly48 <- Read10X(data.dir = data_dir_ly48)
+ly48 = CreateSeuratObject(counts = exp_matrix_ly48, project = "ly48")
+ly48 
+
+```
+
+```{r}
+
+# View examples
+colnames(un)
+rownames(un)
+head(x = un@meta.data, 20)
+
+?seurat
+
+```
+
+
+```{r}
+
+### Quality Control & Filtering
+
+# View summary of total expression per single cell
+summary(colSums(un))
+summary(colSums(lat))
+summary(colSums(ly20))
+summary(colSums(ly48))
+
+### Note that the mean decreases from uninfected to latent to ly 
+### This suggests that host gene expression is decreasing as viral expression increases 
+
+
+# Calculate percentage of all counts belonging to a subset of the possible features for each cell
+VlnPlot(object = un, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+VlnPlot(object = lat, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+VlnPlot(object = ly20, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+VlnPlot(object = ly48, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+
+
+# Visualize feature relationships: Count_RNA vs. Feature_RNA
+scatter_un_1 <- FeatureScatter(object = un, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                               col = "darkblue") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_lat_1 <- FeatureScatter(object = lat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                                col = "darkred") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_ly20_1 <- FeatureScatter(object = ly20, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                                 col = "darkgoldenrod2") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_ly48_1 <- FeatureScatter(object = ly48, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                                 col = "darkgreen") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_un_1
+scatter_lat_1
+scatter_ly20_1
+scatter_ly48_1
+#CombinePlots(plots = list(scatter_un_1, scatter_lat_1, scatter_ly20_1, scatter_ly48_1), ncol = 2)
+
+### All appear to be a horizontal parabola (k * sqrt(x) relationship)
+
+
+```
+
+
+
+```{r}
+
+# Normalize each gene expression matrix 
+
+```
+
+
+---
+
+
+---
+
+
+---
