@@ -54,6 +54,8 @@ library(Seurat)
 library(ggplot2)
 library(circlize)
 
+packageVersion("Seurat")
+
 ```
 
 
@@ -517,6 +519,40 @@ JackStrawPlot(object = ly20_jack, dims = 1:20)
 ly48_jack <- JackStraw(object = ly48_pca, num.replicate = 100)
 ly48_jack <- ScoreJackStraw(object = ly48_jack, dims = 1:20)
 JackStrawPlot(object = ly48_jack, dims = 1:20)
+
+```
+
+```{r}
+
+# Cluster Cells
+
+# Uninfected
+un_clust <- FindNeighbors(object = un_jack, dims = 1:20)
+un_clust <- FindClusters(object = un_clust, resolution = 0.5)
+head(x = Idents(object = un_clust), 10)
+
+# Latent
+lat_clust <- FindNeighbors(object = lat_jack, dims = 1:20)
+lat_clust <- FindClusters(object = lat_clust, resolution = 0.5)
+head(x = Idents(object = lat_clust), 10)
+
+# LY20
+ly20_clust <- FindNeighbors(object = ly20_jack, dims = 1:20)
+ly20_clust <- FindClusters(object = ly20_clust, resolution = 0.5)
+head(x = Idents(object = ly20_clust), 10)
+
+# LY48
+ly48_clust <- FindNeighbors(object = ly48_jack, dims = 1:20)
+ly48_clust <- FindClusters(object = ly48_clust, resolution = 0.5)
+head(x = Idents(object = ly48_clust), 10)
+
+```
+
+```{r}
+
+un_umap <- RunUMAP(object = un_clust, dims = 1:20)
+DimPlot(object = un_umap, reduction = "umap")
+
 
 ```
 
