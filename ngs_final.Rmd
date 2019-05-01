@@ -776,6 +776,105 @@ dev.off()
 
 ```
 
+---
+
+
+```{r}
+
+# Load objects 
+
+un_scale <- readRDS(file = "./uninfected_scale.rds")
+lat_scale <- readRDS(file = "./latent_scale.rds")
+ly20_scale <- readRDS(file = "./ly20_scale.rds")
+ly48_scale <- readRDS(file = "./ly48_scale.rds")
+
+```
+
+
+---
+
+
+```{r}
+
+# Find markers for each cluster
+
+# Only positive markers 
+un_markers <- FindAllMarkers(object = un_scale, only.pos = TRUE)
+un_markers_3 <- un_markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_logFC)
+un_markers_3
+
+lat_markers <- FindAllMarkers(object = lat_scale, only.pos = TRUE)
+lat_markers_3 <- lat_markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_logFC)
+lat_markers_3
+
+ly20_markers <- FindAllMarkers(object = ly20_scale, only.pos = TRUE)
+ly20_markers_3 <- ly20_markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_logFC)
+ly20_markers_3
+
+ly48_markers <- FindAllMarkers(object = ly48_scale, only.pos = TRUE)
+ly48_markers_3 <- ly48_markers %>% group_by(cluster) %>% top_n(n = 3, wt = avg_logFC)
+ly48_markers_3
+
+```
+
+
+```{r}
+
+# Cluster identifier heatmap
+un_markers_10 <- un_markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+un_markers_10_heat <- DoHeatmap(object = un_scale, features = un_markers_10$gene) + NoLegend()
+un_markers_10_heat
+
+lat_markers_10 <- lat_markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+lat_markers_10_heat <- DoHeatmap(object = lat_scale, features = lat_markers_10$gene) + NoLegend()
+lat_markers_10_heat
+
+ly20_markers_10 <- ly20_markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+ly20_markers_10_heat <- DoHeatmap(object = ly20_scale, features = ly20_markers_10$gene) + NoLegend()
+ly20_markers_10_heat
+
+ly48_markers_10 <- ly48_markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+ly48_markers_10_heat <- DoHeatmap(object = ly48_scale, features = ly48_markers_10$gene) + NoLegend()
+ly48_markers_10_heat
+
+```
+
+
+---
+
+```{r}
+
+# Save marker dataframes
+write.table(un_markers, "uninfected_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(lat_markers, "latent_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(ly20_markers, "ly20_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(ly48_markers, "ly48_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+
+write.table(un_markers_3, "uninfected_top_3_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(lat_markers_3, "latent_top_3_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(ly20_markers_3, "ly20_top_3_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(ly48_markers_3, "ly48_top_3_markers.tsv", sep = "\t", quote = FALSE, row.names = FALSE)
+
+# Save marker heatmaps
+png("uninfected_marker_10_heat.png", units="in", width=10, height=5, res=600) 
+un_markers_10_heat
+dev.off()
+
+png("latent_marker_10_heat.png", units="in", width=10, height=5, res=600) 
+lat_markers_10_heat
+dev.off()
+
+png("ly20_marker_10_heat.png", units="in", width=10, height=5, res=600) 
+ly20_markers_10_heat
+dev.off()
+
+png("ly48_marker_10_heat.png", units="in", width=10, height=5, res=600) 
+ly48_markers_10_heat
+dev.off()
+
+
+```
+
 
 ---
 
