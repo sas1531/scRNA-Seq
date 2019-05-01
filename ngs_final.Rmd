@@ -449,28 +449,32 @@ ly48_scale <- ScaleData(object = ly48_feat, features = ly48_genes)
 ### Linear Dimensional Reduction
 # PCA
 
-un_pca <- RunPCA(object = un_scale, features = VariableFeatures(object = un_scale))
-lat_pca <- RunPCA(object = lat_scale, features = VariableFeatures(object = lat_scale))
-ly20_pca <- RunPCA(object = ly20_scale, features = VariableFeatures(object = ly20_scale))
-ly48_pca <- RunPCA(object = ly48_scale, features = VariableFeatures(object = ly48_scale))
+un_scale <- RunPCA(object = un_scale, features = VariableFeatures(object = un_scale))
+lat_scale <- RunPCA(object = lat_scale, features = VariableFeatures(object = lat_scale))
+lat_scale <- RunPCA(object = ly20_scale, features = VariableFeatures(object = ly20_scale))
+ly48_scale <- RunPCA(object = ly48_scale, features = VariableFeatures(object = ly48_scale))
 
 # View PCA features
-print(x = un_pca[["pca"]], dims = 1:5, nfeatures = 5)
-print(x = lat_pca[["pca"]], dims = 1:5, nfeatures = 5)
-print(x = ly20_pca[["pca"]], dims = 1:5, nfeatures = 5)
-print(x = ly48_pca[["pca"]], dims = 1:5, nfeatures = 5)
+print(x = un_scale[["pca"]], dims = 1:5, nfeatures = 5)
+print(x = lat_scale[["pca"]], dims = 1:5, nfeatures = 5)
+print(x = lat_scale[["pca"]], dims = 1:5, nfeatures = 5)
+print(x = ly48_scale[["pca"]], dims = 1:5, nfeatures = 5)
 
 # Get and set variable feature information
-VizDimLoadings(object = un_pca, dims = 1:2, reduction = "pca")
-VizDimLoadings(object = lat_pca, dims = 1:2, reduction = "pca")
-VizDimLoadings(object = ly20_pca, dims = 1:2, reduction = "pca")
-VizDimLoadings(object = ly48_pca, dims = 1:2, reduction = "pca")
+VizDimLoadings(object = un_scale, dims = 1:2, reduction = "pca")
+VizDimLoadings(object = lat_scale, dims = 1:2, reduction = "pca")
+VizDimLoadings(object = lat_scale, dims = 1:2, reduction = "pca")
+VizDimLoadings(object = ly48_scale, dims = 1:2, reduction = "pca")
 
 # View Dimensional Reduction Plot 
-DimPlot(object = un_pca, reduction = "pca", cols = c("darkblue", "darkblue"))
-DimPlot(object = lat_pca, reduction = "pca", cols = c("darkred", "darkred"))
-DimPlot(object = ly20_pca, reduction = "pca", cols = c("darkgoldenrod2", "darkgoldenrod2"))
-DimPlot(object = ly48_pca, reduction = "pca", cols = c("darkgreen", "darkgreen"))
+un_pca <- DimPlot(object = un_scale, reduction = "pca", cols = c("darkblue", "darkblue"))
+un_pca
+lat_pca <- DimPlot(object = lat_scale, reduction = "pca", cols = c("darkred", "darkred"))
+lat_pca
+ly20_pca <- DimPlot(object = lat_scale, reduction = "pca", cols = c("darkgoldenrod2", "darkgoldenrod2"))
+ly20_pca
+ly48_pca <- DimPlot(object = ly48_scale, reduction = "pca", cols = c("darkgreen", "darkgreen"))
+ly48_pca
 
 
 
@@ -479,15 +483,16 @@ DimPlot(object = ly48_pca, reduction = "pca", cols = c("darkgreen", "darkgreen")
 
 ###### FIX colors
 
-ramp <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
-un_gg <- DimHeatmap(object = un_pca, dims = 1:2, cells = 500, fast = FALSE)
-class(un_gg)
-final <- un_gg + geom_raster() + scale_fill_gradientn(colours=c("#0000FFFF","#FFFFFFFF","#FF0000FF"))
-final
+#ramp <- colorRamp2(c(-2, 0, 2), c("blue", "white", "red"))
+#un_gg <- DimHeatmap(object = un_scale, dims = 1:2, cells = 500, fast = FALSE)
+#class(un_gg)
+#final <- un_gg + geom_raster() + scale_fill_gradientn(colours=c("#0000FFFF","#FFFFFFFF","#FF0000FF"))
+#final
 
-DimHeatmap(object = lat_pca, dims = 1:2, cells = 500, balanced = TRUE, fast = FALSE)
-DimHeatmap(object = ly20_pca, dims = 1:2, cells = 500, balanced = TRUE, fast = FALSE)
-DimHeatmap(object = ly48_pca, dims = 1:2, cells = 500, balanced = TRUE, fast = FALSE)
+DimHeatmap(object = un_scale, dims = 1:2, cells = 500, balanced = TRUE, fast = FALSE)
+DimHeatmap(object = lat_scale, dims = 1:2, cells = 500, balanced = TRUE, fast = FALSE)
+DimHeatmap(object = ly20_scale, dims = 1:2, cells = 500, balanced = TRUE, fast = FALSE)
+DimHeatmap(object = ly48_scale, dims = 1:2, cells = 500, balanced = TRUE, fast = FALSE)
 
 
 ```
@@ -498,27 +503,27 @@ DimHeatmap(object = ly48_pca, dims = 1:2, cells = 500, balanced = TRUE, fast = F
 # How many PCs are optimal 
 
 # Elbow Plot
-ElbowPlot(object = un_pca) # 14-15 PCs
-ElbowPlot(object = lat_pca) # 12-13 PCs
-ElbowPlot(object = ly20_pca) # 5-6 PCs
-ElbowPlot(object = ly48_pca) # 7-6 PCs
+ElbowPlot(object = un_scale) # 14-15 PCs
+ElbowPlot(object = lat_scale) # 12-13 PCs
+ElbowPlot(object = ly20_scale) # 5-6 PCs
+ElbowPlot(object = ly48_scale) # 7-6 PCs
 
 # Compare the distribution of p-values for each PC with a uniform distribution (dashed line)
-un_jack <- JackStraw(object = un_pca, num.replicate = 100)
-un_jack <- ScoreJackStraw(object = un_jack, dims = 1:20)
-JackStrawPlot(object = un_jack, dims = 1:20)
+un_scale <- JackStraw(object = un_scale, num.replicate = 100)
+un_scale <- ScoreJackStraw(object = un_scale, dims = 1:20)
+JackStrawPlot(object = un_scale, dims = 1:20)
 
-lat_jack <- JackStraw(object = lat_pca, num.replicate = 100)
-lat_jack <- ScoreJackStraw(object = lat_jack, dims = 1:20)
-JackStrawPlot(object = lat_jack, dims = 1:20)
+lat_scale <- JackStraw(object = lat_scale, num.replicate = 100)
+lat_scale <- ScoreJackStraw(object = lat_scale, dims = 1:20)
+JackStrawPlot(object = lat_scale, dims = 1:20)
 
-ly20_jack <- JackStraw(object = ly20_pca, num.replicate = 100)
-ly20_jack <- ScoreJackStraw(object = ly20_jack, dims = 1:20)
-JackStrawPlot(object = ly20_jack, dims = 1:20)
+ly20_scale <- JackStraw(object = ly20_scale, num.replicate = 100)
+ly20_scale <- ScoreJackStraw(object = ly20_scale, dims = 1:20)
+JackStrawPlot(object = ly20_scale, dims = 1:20)
 
-ly48_jack <- JackStraw(object = ly48_pca, num.replicate = 100)
-ly48_jack <- ScoreJackStraw(object = ly48_jack, dims = 1:20)
-JackStrawPlot(object = ly48_jack, dims = 1:20)
+ly48_scale <- JackStraw(object = ly48_scale, num.replicate = 100)
+ly48_scale <- ScoreJackStraw(object = ly48_scale, dims = 1:20)
+JackStrawPlot(object = ly48_scale, dims = 1:20)
 
 ```
 
@@ -527,32 +532,81 @@ JackStrawPlot(object = ly48_jack, dims = 1:20)
 # Cluster Cells
 
 # Uninfected
-un_clust <- FindNeighbors(object = un_jack, dims = 1:20)
-un_clust <- FindClusters(object = un_clust, resolution = 0.5)
-head(x = Idents(object = un_clust), 10)
+un_scale <- FindNeighbors(object = un_scale, dims = 1:20)
+un_scale <- FindClusters(object = un_scale, resolution = 0.5)
+head(x = Idents(object = un_scale), 10)
 
 # Latent
-lat_clust <- FindNeighbors(object = lat_jack, dims = 1:20)
-lat_clust <- FindClusters(object = lat_clust, resolution = 0.5)
-head(x = Idents(object = lat_clust), 10)
+lat_scale <- FindNeighbors(object = lat_scale, dims = 1:20)
+lat_scale <- FindClusters(object = lat_scale, resolution = 0.5)
+head(x = Idents(object = lat_scale), 10)
 
 # LY20
-ly20_clust <- FindNeighbors(object = ly20_jack, dims = 1:20)
-ly20_clust <- FindClusters(object = ly20_clust, resolution = 0.5)
-head(x = Idents(object = ly20_clust), 10)
+ly20_scale <- FindNeighbors(object = ly20_scale, dims = 1:20)
+ly20_scale <- FindClusters(object = ly20_scale, resolution = 0.5)
+head(x = Idents(object = ly20_scale), 10)
 
 # LY48
-ly48_clust <- FindNeighbors(object = ly48_jack, dims = 1:20)
-ly48_clust <- FindClusters(object = ly48_clust, resolution = 0.5)
-head(x = Idents(object = ly48_clust), 10)
+ly48_scale <- FindNeighbors(object = ly48_scale, dims = 1:20)
+ly48_scale <- FindClusters(object = ly48_scale, resolution = 0.5)
+head(x = Idents(object = ly48_scale), 10)
 
 ```
 
 ```{r}
 
-un_umap <- RunUMAP(object = un_clust, dims = 1:20)
-DimPlot(object = un_umap, reduction = "umap")
+set.seed(8888)
+# TSNE 
 
+un_scale <- RunTSNE(object = un_scale, dims = 1:20, tsne.method = "Rtsne")
+un_tsne <- DimPlot(object = un_scale, reduction = "tsne")
+un_tsne
+
+lat_scale <- RunTSNE(object = lat_scale, dims = 1:20, tsne.method = "Rtsne")
+lat_tsne <- DimPlot(object = lat_scale, reduction = "tsne")
+lat_tsne
+
+ly20_scale <- RunTSNE(object = ly20_scale, dims = 1:20, tsne.method = "Rtsne")
+ly20_tsne <- DimPlot(object = ly20_scale, reduction = "tsne")
+ly20_tsne
+
+ly48_scale <- RunTSNE(object = ly48_scale, dims = 1:20, tsne.method = "Rtsne")
+ly48_tsne <- DimPlot(object = ly48_scale, reduction = "tsne")
+ly48_tsne
+
+```
+
+```{r}
+
+set.seed(8888)
+# UMAP
+
+un_scale <- RunUMAP(object = un_scale, dims = 1:20)
+un_umap <- DimPlot(object = un_scale, reduction = "umap")
+un_umap
+
+lat_scale <- RunTSNE(object = lat_scale, dims = 1:20)
+lat_umap <- DimPlot(object = lat_scale, reduction = "umap")
+lat_umap
+
+ly20_scale <- RunTSNE(object = ly20_scale, dims = 1:20)
+ly20_umap <- DimPlot(object = ly20_scale, reduction = "umap")
+ly20_umap
+
+ly48_scale <- RunTSNE(object = ly48_scale, dims = 1:20)
+ly48_umap <- DimPlot(object = ly48_scale, reduction = "umap")
+ly48_umap
+
+```
+
+
+```{r}
+
+# Save objects
+saveRDS(un_scale, file = "./uninfected_scale.rds")
+saveRDS(lat_scale, file = "./latent_scale.rds")
+saveRDS(ly20_scale, file = "./ly20_scale.rds")
+saveRDS(ly48_scale, file = "./ly48_scale.rds")
 
 ```
 
@@ -569,8 +623,8 @@ DimPlot(object = un_umap, reduction = "umap")
 # Integrate data for comparisons (uninfected vs latent, latent vs ly20, ly20 vs ly48)
 
 # Ex.
-immune.anchors <- FindIntegrationAnchors(object.list = list(ctrl, stim), dims = 1:20)
-immune.combined <- IntegrateData(anchorset = immune.anchors, dims = 1:20)
+#immune.anchors <- FindIntegrationAnchors(object.list = list(ctrl, stim), dims = 1:20)
+#immune.combined <- IntegrateData(anchorset = immune.anchors, dims = 1:20)
 
 # https://satijalab.org/seurat/v3.0/immune_alignment.html 
 
