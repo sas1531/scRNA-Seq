@@ -879,6 +879,85 @@ dev.off()
 ---
 
 
+CellMarker:
+
+http://biocc.hrbmu.edu.cn/CellMarker/browse.jsp
+https://academic.oup.com/nar/article/47/D1/D721/5115823 
+
+
+Monocle:
+Classify cells function
+
+Databases:
+https://panglaodb.se/markers.html 
+
+---
+
+
+```{r}
+
+# Read in cell classifying data frame using panglaodb
+
+class <- read.table("./PanglaoDB_markers_30_Apr_2019.tsv", sep = "\t", header = TRUE)
+class
+colnames(class)[2:3] <- c("gene", "cell_type")
+class <- filter(class, species == "Mm Hs" | species == "Mm")
+class <- dplyr::select(class, gene, cell_type, sensitivity_mouse, specificity_mouse)
+class$gene <- as.character(class$gene)
+class
+
+
+# Change markers to upper case for intersection
+un_markers_10$gene <- toupper(un_markers_10$gene)
+lat_markers_10$gene <- toupper(lat_markers_10$gene)
+ly20_markers_10$gene <- toupper(ly20_markers_10$gene)
+ly48_markers_10$gene <- toupper(ly48_markers_10$gene)
+
+# Join for classification
+
+un_class <- inner_join(un_markers_10, class, by = "gene")
+lat_class <- inner_join(lat_markers_10, class, by = "gene")
+ly20_class <- inner_join(ly20_markers_10, class, by = "gene")
+ly48_class <- inner_join(ly48_markers_10, class, by = "gene")
+
+un_class
+lat_class
+ly20_class
+ly48_class
+
+```
+
+```{r}
+
+# Cell classification using CellMarker matrix 
+
+cell_marker <- read.table("./PanglaoDB_markers_30_Apr_2019.tsv", sep = "\t", header = TRUE)
+cell_marker
+
+```
+
+
+---
+
+
+---
+
+
+# Classify cells by sensitivity and specificity scores?
+
+
+
+
+
+
+
+
+---
+
+
+---
+
+
 ```{r}
 
 # Integrate data for comparisons (uninfected vs latent, latent vs ly20, ly20 vs ly48)
