@@ -267,44 +267,47 @@ hist(colSums(ly48_norm_log),
 ### Check CLR Normalization for comparison
 
 # Uninfected CLR Normalization
-un_norm_clr <- NormalizeData(un, assay = NULL, normalization.method = "CLR", 
-                         scale.factor = 10000, margin = 1)
-hist(rowSums(un_norm_clr),
-     breaks = 100, main = "Uninfected CLR Normalized: Expression sum by Feature",
-     xlab = "Sum Expression")
-hist(colSums(un_norm_clr),
-     breaks = 100, main = "Uninfected CLR Normalized: Expression sum by Cell",
-     xlab = "Sum Expression")
+#un_norm_clr <- NormalizeData(un, assay = NULL, normalization.method = "CLR", 
+#                         scale.factor = 10000, margin = 1)
+#hist(rowSums(un_norm_clr),
+#     breaks = 100, main = "Uninfected CLR Normalized: Expression sum by Feature",
+#     xlab = "Sum Expression")
+#hist(colSums(un_norm_clr),
+#     breaks = 100, main = "Uninfected CLR Normalized: Expression sum by Cell",
+#     xlab = "Sum Expression")
 
 # Latent CLR Normalization
-lat_norm_clr <- NormalizeData(lat, assay = NULL, normalization.method = "CLR", 
-                         scale.factor = 10000, margin = 1)
-hist(rowSums(lat_norm_clr),
-     breaks = 100, main = "Latent CLR Normalized: Expression sum by Feature",
-     xlab = "Sum Expression")
-hist(colSums(lat_norm_clr),
-     breaks = 100, main = "Latent CLR Normalized: Expression sum by Cell",
-     xlab = "Sum Expression")
+#lat_norm_clr <- NormalizeData(lat, assay = NULL, normalization.method = "CLR", 
+#                         scale.factor = 10000, margin = 1)
+#hist(rowSums(lat_norm_clr),
+#     breaks = 100, main = "Latent CLR Normalized: Expression sum by Feature",
+#     xlab = "Sum Expression")
+#hist(colSums(lat_norm_clr),
+#     breaks = 100, main = "Latent CLR Normalized: Expression sum by Cell",
+#     xlab = "Sum Expression")
 
 # ly20 CLR Normalization
-ly20_norm_clr <- NormalizeData(ly20, assay = NULL, normalization.method = "CLR", 
-                         scale.factor = 10000, margin = 1)
-hist(rowSums(ly20_norm_clr),
-     breaks = 100, main = "LY20 CLR Normalized: Expression sum by Feature",
-     xlab = "Sum Expression")
-hist(colSums(ly20_norm_clr),
-     breaks = 100, main = "LY20 CLR Normalized: Expression sum by Cell",
-     xlab = "Sum Expression")
+#ly20_norm_clr <- NormalizeData(ly20, assay = NULL, normalization.method = "CLR", 
+#                         scale.factor = 10000, margin = 1)
+#hist(rowSums(ly20_norm_clr),
+#     breaks = 100, main = "LY20 CLR Normalized: Expression sum by Feature",
+#     xlab = "Sum Expression")
+#hist(colSums(ly20_norm_clr),
+#     breaks = 100, main = "LY20 CLR Normalized: Expression sum by Cell",
+#     xlab = "Sum Expression")
 
 # ly48 CLR Normalization
-ly48_norm_clr <- NormalizeData(ly48, assay = NULL, normalization.method = "CLR", 
-                         scale.factor = 10000, margin = 1)
-hist(rowSums(ly48_norm_clr),
-     breaks = 100, main = "LY48 CLR Normalized: Expression sum by Feature",
-     xlab = "Sum Expression")
-hist(colSums(ly48_norm_clr),
-     breaks = 100, main = "LY48 CLR Normalized: Expression sum by Cell",
-     xlab = "Sum Expression")
+#ly48_norm_clr <- NormalizeData(ly48, assay = NULL, normalization.method = "CLR", 
+#                         scale.factor = 10000, margin = 1)
+#hist(rowSums(ly48_norm_clr),
+#     breaks = 100, main = "LY48 CLR Normalized: Expression sum by Feature",
+#     xlab = "Sum Expression")
+#hist(colSums(ly48_norm_clr),
+#     breaks = 100, main = "LY48 CLR Normalized: Expression sum by Cell",
+#     xlab = "Sum Expression")
+
+
+# This doesn't work as well 
 
 ```
 
@@ -451,27 +454,28 @@ ly48_scale <- ScaleData(object = ly48_feat, features = ly48_genes)
 
 un_scale <- RunPCA(object = un_scale, features = VariableFeatures(object = un_scale))
 lat_scale <- RunPCA(object = lat_scale, features = VariableFeatures(object = lat_scale))
-lat_scale <- RunPCA(object = ly20_scale, features = VariableFeatures(object = ly20_scale))
+ly20_scale <- RunPCA(object = ly20_scale, features = VariableFeatures(object = ly20_scale))
 ly48_scale <- RunPCA(object = ly48_scale, features = VariableFeatures(object = ly48_scale))
 
 # View PCA features
 print(x = un_scale[["pca"]], dims = 1:5, nfeatures = 5)
 print(x = lat_scale[["pca"]], dims = 1:5, nfeatures = 5)
-print(x = lat_scale[["pca"]], dims = 1:5, nfeatures = 5)
+print(x = ly20_scale[["pca"]], dims = 1:5, nfeatures = 5)
 print(x = ly48_scale[["pca"]], dims = 1:5, nfeatures = 5)
 
 # Get and set variable feature information
-VizDimLoadings(object = un_scale, dims = 1:2, reduction = "pca")
-VizDimLoadings(object = lat_scale, dims = 1:2, reduction = "pca")
-VizDimLoadings(object = lat_scale, dims = 1:2, reduction = "pca")
-VizDimLoadings(object = ly48_scale, dims = 1:2, reduction = "pca")
+un_feat_info <- VizDimLoadings(object = un_scale, dims = 1:2, reduction = "pca")
+un_feat_info
+lat_feat_info <- VizDimLoadings(object = lat_scale, dims = 1:2, reduction = "pca")
+ly20_feat_info <- VizDimLoadings(object = ly20_scale, dims = 1:2, reduction = "pca")
+ly48_feat_info <- VizDimLoadings(object = ly48_scale, dims = 1:2, reduction = "pca")
 
 # View Dimensional Reduction Plot 
 un_pca <- DimPlot(object = un_scale, reduction = "pca", cols = c("darkblue", "darkblue"))
 un_pca
 lat_pca <- DimPlot(object = lat_scale, reduction = "pca", cols = c("darkred", "darkred"))
 lat_pca
-ly20_pca <- DimPlot(object = lat_scale, reduction = "pca", cols = c("darkgoldenrod2", "darkgoldenrod2"))
+ly20_pca <- DimPlot(object = ly20_scale, reduction = "pca", cols = c("darkgoldenrod2", "darkgoldenrod2"))
 ly20_pca
 ly48_pca <- DimPlot(object = ly48_scale, reduction = "pca", cols = c("darkgreen", "darkgreen"))
 ly48_pca
@@ -558,19 +562,19 @@ head(x = Idents(object = ly48_scale), 10)
 set.seed(8888)
 # TSNE 
 
-un_scale <- RunTSNE(object = un_scale, dims = 1:20, tsne.method = "Rtsne")
+un_scale <- RunTSNE(object = un_scale, dims = 1:20)
 un_tsne <- DimPlot(object = un_scale, reduction = "tsne")
 un_tsne
 
-lat_scale <- RunTSNE(object = lat_scale, dims = 1:20, tsne.method = "Rtsne")
+lat_scale <- RunTSNE(object = lat_scale, dims = 1:20)
 lat_tsne <- DimPlot(object = lat_scale, reduction = "tsne")
 lat_tsne
 
-ly20_scale <- RunTSNE(object = ly20_scale, dims = 1:20, tsne.method = "Rtsne")
+ly20_scale <- RunTSNE(object = ly20_scale, dims = 1:20)
 ly20_tsne <- DimPlot(object = ly20_scale, reduction = "tsne")
 ly20_tsne
 
-ly48_scale <- RunTSNE(object = ly48_scale, dims = 1:20, tsne.method = "Rtsne")
+ly48_scale <- RunTSNE(object = ly48_scale, dims = 1:20)
 ly48_tsne <- DimPlot(object = ly48_scale, reduction = "tsne")
 ly48_tsne
 
@@ -585,15 +589,15 @@ un_scale <- RunUMAP(object = un_scale, dims = 1:20)
 un_umap <- DimPlot(object = un_scale, reduction = "umap")
 un_umap
 
-lat_scale <- RunTSNE(object = lat_scale, dims = 1:20)
+lat_scale <- RunUMAP(object = lat_scale, dims = 1:20)
 lat_umap <- DimPlot(object = lat_scale, reduction = "umap")
 lat_umap
 
-ly20_scale <- RunTSNE(object = ly20_scale, dims = 1:20)
+ly20_scale <- RunUMAP(object = ly20_scale, dims = 1:20)
 ly20_umap <- DimPlot(object = ly20_scale, reduction = "umap")
 ly20_umap
 
-ly48_scale <- RunTSNE(object = ly48_scale, dims = 1:20)
+ly48_scale <- RunUMAP(object = ly48_scale, dims = 1:20)
 ly48_umap <- DimPlot(object = ly48_scale, reduction = "umap")
 ly48_umap
 
@@ -613,6 +617,164 @@ saveRDS(ly48_scale, file = "./ly48_scale.rds")
 
 ---
 
+```{r}
+
+
+# Export Figures
+
+# Normalized Distribution
+png("uninfected_sub_norm_log_hist.png", units="in", width=8, height=5, res=600) 
+hist(colSums(un_sub_norm_log),
+     breaks = 100, main = "Uninfected Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression",
+     col = "darkblue")
+dev.off()
+
+png("latent_sub_norm_log_hist.png", units="in", width=8, height=5, res=600) 
+hist(colSums(lat_sub_norm_log),
+     breaks = 100, main = "Latent Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression",
+     col = "darkred")
+dev.off()
+
+png("ly20_sub_norm_log_hist.png", units="in", width=8, height=5, res=600) 
+hist(colSums(ly20_sub_norm_log),
+     breaks = 100, main = "LY20 Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression",
+     col = "darkgoldenrod2")
+dev.off()
+
+png("ly48_sub_norm_log_hist.png", units="in", width=8, height=5, res=600) 
+hist(colSums(ly48_sub_norm_log),
+     breaks = 100, main = "LY48 Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression",
+     col = "darkgreen")
+dev.off()
+
+# Labeled top 10 feature plots
+png("uninfected_feature_plot_top_10.png", units="in", width=8, height=5, res=600) 
+un_feat_plot
+dev.off()
+
+png("latent_feature_plot_top_10.png", units="in", width=8, height=5, res=600) 
+lat_feat_plot
+dev.off()
+
+png("ly20_feature_plot_top_10.png", units="in", width=8, height=5, res=600) 
+ly20_feat_plot
+dev.off()
+
+png("ly48_feature_plot_top_10.png", units="in", width=8, height=5, res=600) 
+ly48_feat_plot
+dev.off()
+
+# Feature info
+png("uninfected_feature_info.png", units="in", width=8, height=5, res=600) 
+un_feat_info
+dev.off()
+
+png("latent_feature_info.png", units="in", width=8, height=5, res=600) 
+lat_feat_info
+dev.off()
+
+png("ly20_feature_info.png", units="in", width=8, height=5, res=600) 
+ly20_feat_info
+dev.off()
+
+png("ly48_feature_info.png", units="in", width=8, height=5, res=600) 
+ly48_feat_info
+dev.off()
+
+
+# PCA
+png("uninfected_pca.png", units="in", width=8, height=5, res=600) 
+un_pca
+dev.off()
+
+png("latent_pca.png", units="in", width=8, height=5, res=600) 
+lat_pca
+dev.off()
+
+png("ly20_pca.png", units="in", width=8, height=5, res=600) 
+ly20_pca
+dev.off()
+
+png("ly48_pca.png", units="in", width=8, height=5, res=600) 
+ly48_pca
+dev.off()
+
+# Elbow Plots
+png("uninfected_elbow.png", units="in", width=8, height=5, res=600) 
+ElbowPlot(object = un_scale)
+dev.off()
+
+png("latent_elbow.png", units="in", width=8, height=5, res=600) 
+ElbowPlot(object = lat_scale)
+dev.off()
+
+png("ly20_elbow.png", units="in", width=8, height=5, res=600) 
+ElbowPlot(object = ly20_scale)
+dev.off()
+
+png("ly48_elbow.png", units="in", width=8, height=5, res=600) 
+ElbowPlot(object = ly48_scale)
+dev.off()
+
+
+# PCA p-value distribution (jackstraw)
+png("uninfected_jackstraw.png", units="in", width=8, height=5, res=600) 
+JackStrawPlot(object = un_scale, dims = 1:20)
+dev.off()
+
+png("latent_jackstraw.png", units="in", width=8, height=5, res=600) 
+JackStrawPlot(object = lat_scale, dims = 1:20)
+dev.off()
+
+png("ly20_jackstraw.png", units="in", width=8, height=5, res=600) 
+JackStrawPlot(object = ly20_scale, dims = 1:20)
+dev.off()
+
+png("ly48_jackstraw.png", units="in", width=8, height=5, res=600) 
+JackStrawPlot(object = ly48_scale, dims = 1:20)
+dev.off()
+
+
+# TSNE
+png("uninfected_tsne.png", units="in", width=8, height=5, res=600) 
+un_tsne
+dev.off()
+
+png("latent_tsne.png", units="in", width=8, height=5, res=600) 
+lat_tsne
+dev.off()
+
+png("ly20_tsne.png", units="in", width=8, height=5, res=600) 
+ly20_tsne
+dev.off()
+
+png("ly48_tsne.png", units="in", width=8, height=5, res=600) 
+ly48_tsne
+dev.off()
+
+
+# UMAP
+png("uninfected_umap.png", units="in", width=8, height=5, res=600) 
+un_umap
+dev.off()
+
+png("latent_umap.png", units="in", width=8, height=5, res=600) 
+lat_umap
+dev.off()
+
+png("ly20_umap.png", units="in", width=8, height=5, res=600) 
+ly20_umap
+dev.off()
+
+png("ly48_umap.png", units="in", width=8, height=5, res=600) 
+ly48_umap
+dev.off()
+
+```
 
 
 ---
