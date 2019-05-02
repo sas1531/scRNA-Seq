@@ -1,0 +1,395 @@
+---
+title: "ngs_final_integrated"
+author: "Shaleigh Smith"
+date: "5/2/2019"
+output: html_document
+---
+
+
+---
+
+---
+
+
+
+---
+
+
+---
+
+Shaleigh Smith
+NGS Final
+
+---
+
+Cellranger Results:
+- Unfiltered: Contains every barcode from fixed list of known-good barcode sequences. This includes background and cell associated barcodes.
+- Filtered: Contains only detected cellular barcodes.
+
+---
+
+General Steps:
+1) Initialize a Seurat object
+2) Filter cells based on built-in metrics
+3) Normalize the data
+4) Select variable genes across cells
+5) Removing confounding factors by regression
+6) Linear dimensionality reduction
+7) PCA-based clustering
+8) t-SNE & UMAP visualization 
+9) Identify differentially expressed genes
+
+---
+
+# Helpful Links:
+
+https://github.com/satijalab/seurat/wiki/Assay 
+https://github.com/igordot/seurat/blob/master/R/preprocessing.R
+https://satijalab.org/seurat/v3.0/immune_alignment.html 
+https://github.com/satijalab/seurat/wiki 
+https://broadinstitute.github.io/2019_scWorkshop/index.html 
+https://hemberg-lab.github.io/scRNA.seq.course/index.html
+#https://satijalab.org/seurat/v3.0/pbmc3k_tutorial.html
+
+
+---
+
+
+```{r}
+
+# Load libraries
+library(tidyverse)
+library(dplyr)
+library(Matrix)
+library(devtools)
+library(Seurat)
+library(ggplot2)
+library(circlize)
+
+packageVersion("Seurat")
+
+```
+
+
+---
+
+
+Preprocessing
+
+---
+
+
+```{r}
+
+# Set working directory
+setwd("/Users/sha/Desktop/NGS_Informatics/NGS_final_project/")
+
+### Preprocessing 
+# Import matrices 
+# Create Seurat objects 
+# Set minimum for cells (3) and features (200) to remove low quality cells 
+
+# Uninfected
+data_dir_un <- "./uninfected/filtered_feature_bc_matrix/"
+list.files(data_dir_un) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_un <- Read10X(data.dir = data_dir_un)
+un <- CreateSeuratObject(counts = exp_matrix_un, project = "uninfected",
+                         min.cells = 3, min.features = 200)
+un$stage <- "Uninfected"
+un
+
+
+# Latent
+data_dir_lat <- "./latent/filtered_feature_bc_matrix/"
+list.files(data_dir_lat) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_lat <- Read10X(data.dir = data_dir_lat)
+lat = CreateSeuratObject(counts = exp_matrix_lat, project = "latent",
+                         min.cells = 3, min.features = 200)
+lat$stage <- "Latent"
+lat
+
+
+# Ly20
+data_dir_ly20 <- "./ly20/filtered_feature_bc_matrix/"
+list.files(data_dir_ly20) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_ly20 <- Read10X(data.dir = data_dir_ly20)
+ly20 = CreateSeuratObject(counts = exp_matrix_ly20, project = "ly20",
+                         min.cells = 3, min.features = 200)
+ly20$stage <- "LY20"
+ly20
+
+
+# Uninfected
+data_dir_ly48 <- "./ly48/filtered_feature_bc_matrix/"
+list.files(data_dir_ly48) # Should show barcodes.tsv, genes.tsv, and matrix.mtx
+exp_matrix_ly48 <- Read10X(data.dir = data_dir_ly48)
+ly48 = CreateSeuratObject(counts = exp_matrix_ly48, project = "ly48",
+                         min.cells = 3, min.features = 200)
+ly48$stage <- "LY48"
+ly48 
+
+```
+
+```{r}
+
+# View examples
+colnames(un)
+rownames(un)
+head(x = un@meta.data, 20)
+un[["RNA"]]@data
+
+?seurat
+
+```
+
+
+```{r}
+
+### Quality Control & Filtering
+
+# View summary of total expression by single cell
+summary(colSums(un))
+summary(colSums(lat))
+summary(colSums(ly20))
+summary(colSums(ly48))
+
+### Note that the mean decreases from uninfected to latent to ly 
+### This suggests that host gene expression is decreasing as viral expression increases 
+
+
+# Calculate percentage of all counts belonging to a subset of the possible features for each cell
+VlnPlot(object = un, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+VlnPlot(object = lat, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+VlnPlot(object = ly20, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+VlnPlot(object = ly48, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, 
+        cols = c("#007BC3"),  pt.size = 0.25)
+
+# Visualize feature relationships: Count_RNA vs. Feature_RNA
+scatter_un_1 <- FeatureScatter(object = un, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                               col = "darkblue") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_lat_1 <- FeatureScatter(object = lat, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                                col = "darkred") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_ly20_1 <- FeatureScatter(object = ly20, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                                 col = "darkgoldenrod2") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_ly48_1 <- FeatureScatter(object = ly48, feature1 = "nCount_RNA", feature2 = "nFeature_RNA",
+                                 col = "darkgreen") + xlim(c(0, 85000)) + ylim(c(0, 8000))
+scatter_un_1
+scatter_lat_1
+scatter_ly20_1
+scatter_ly48_1
+#CombinePlots(plots = list(scatter_un_1, scatter_lat_1, scatter_ly20_1, scatter_ly48_1), ncol = 2)
+
+### All appear to be a horizontal parabola (k * sqrt(x) relationship)
+### All have a fairly high positive correlation (greater than 0.87 )
+
+```
+
+
+```{r}
+
+# Distribution of expression levels by Feature and Cell
+hist(rowSums(un),
+     breaks = 100, main = "Uninfected: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(un),
+     breaks = 100, main = "Uninfected: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+hist(rowSums(lat),
+     breaks = 100, main = "Latent: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(lat),
+     breaks = 100, main = "Latent: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+hist(rowSums(ly20),
+     breaks = 100, main = "LY20: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly20),
+     breaks = 100, main = "LY20: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+hist(rowSums(ly48),
+     breaks = 100, main = "LY48: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly48),
+     breaks = 100, main = "LY48: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+```
+
+
+```{r}
+
+### Remove unwanted cells from the dataset to decrease noise after normalization
+
+# The normalized uninfected appears to be bimodal
+# To decrease the smalled leftward peak, increase the minimum number of features by cell
+
+un <- subset(x = un, subset = nFeature_RNA > 300 & nFeature_RNA < 6000)
+lat <- subset(x = lat, subset = nFeature_RNA > 300 & nFeature_RNA < 6000)
+ly20 <- subset(x = ly20, subset = nFeature_RNA > 300 & nFeature_RNA < 6000)
+ly48 <- subset(x = ly48, subset = nFeature_RNA > 300 & nFeature_RNA < 6000)
+
+
+```
+
+```{r}
+
+### Do normalization on subsetted matrix
+# Use Log Normalization
+# Alter subset to increase normal distribution
+
+### Normalize each gene expression matrix 
+# Do Log Normalization first with default scale
+
+# Uninfected Log Normalization
+un <- NormalizeData(un, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(un@data),
+     breaks = 100, main = "Uninfected Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(un@data),
+     breaks = 100, main = "Uninfected Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# Latent Log Normalization
+lat <- NormalizeData(lat, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(lat@data),
+     breaks = 100, main = "Latent Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(lat@data),
+     breaks = 100, main = "Latent Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly20 Log Normalization
+ly20 <- NormalizeData(ly20, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(ly20@data),
+     breaks = 100, main = "LY20 Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly20),
+     breaks = 100, main = "LY20 Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+# ly48 Log Normalization
+ly48 <- NormalizeData(ly48, assay = NULL, normalization.method = "LogNormalize", 
+                         scale.factor = 10000)
+
+hist(rowSums(ly48@data),
+     breaks = 100, main = "LY48 Sub Log Normalized: Expression sum by Feature",
+     xlab = "Sum Expression")
+hist(colSums(ly48@data),
+     breaks = 100, main = "LY48 Sub Log Normalized: Expression sum by Cell",
+     xlab = "Sum Expression")
+
+```
+
+---
+
+```{r}
+
+### Feature Selection
+# Identify the most highly variable features
+
+un <- FindVariableFeatures(object = un, selection.method = "vst", nfeatures = 2000)
+lat <- FindVariableFeatures(object = lat, selection.method = "vst", nfeatures = 2000)
+ly20 <- FindVariableFeatures(object = ly20, selection.method = "vst", nfeatures = 2000)
+ly48 <- FindVariableFeatures(object = ly48, selection.method = "vst", nfeatures = 2000)
+
+
+# Identify the 10 most highly variable genes
+un_top10 <- head(x = VariableFeatures(object = un), 10)
+lat_top10 <- head(x = VariableFeatures(object = lat), 10)
+ly20_top10 <- head(x = VariableFeatures(object = ly20), 10)
+ly48_top10 <- head(x = VariableFeatures(object = ly48), 10)
+
+# Plot variable features with labels
+un_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = un_feat, 
+                                                       cols = c("black", "darkblue")), 
+                            points = un_top10, repel = TRUE)
+lat_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = lat_feat, 
+                                                        cols = c("black", "darkred")), 
+                            points = lat_top10, repel = TRUE)
+ly20_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = ly20_feat, 
+                                                         cols = c("black", "darkgoldenrod2")), 
+                            points = ly20_top10, repel = TRUE)
+ly48_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = ly48_feat, 
+                                                         cols = c("black", "darkgreen")), 
+                            points = ly48_top10, repel = TRUE)
+
+un_feat_plot
+lat_feat_plot
+ly20_feat_plot
+ly48_feat_plot
+
+```
+
+
+```{r}
+
+# Integrate the four datasets 
+
+# Identify anchors to integrate the 4 datasets 
+stage_anchors <- FindIntegrationAnchors(object.list = list(un, lat, ly20, ly48), dims = 1:20)
+stage_combined <- IntegrateData(anchorset = stage_anchors, dims = 1:20)
+
+# Label assay
+DefaultAssay(object = stage_combined) <- "integrated"
+
+```
+
+
+```{r}
+
+# Run the standard workflow for visualization and clustering
+stage_combined <- ScaleData(object = stage_combined, verbose = FALSE)
+stage_combined <- RunPCA(object = stage_combined, npcs = 30, verbose = FALSE)
+
+### Determining the Dimensionality of the dataset
+# How many PCs are optimal 
+
+# Elbow Plot
+ElbowPlot(object = stage_combined) # ?????? PCs
+
+# Compare the distribution of p-values for each PC with a uniform distribution (dashed line)
+stage_combined <- JackStraw(object = stage_combined, num.replicate = 100)
+stage_combined <- ScoreJackStraw(object = stage_combined, dims = 1:20)
+JackStrawPlot(object = stage_combined, dims = 1:20)
+
+
+```
+
+```{r}
+
+# t-SNE and Clustering
+stage_combined <- RunTSNE(object = stage_combined, dims = 1:20)
+stage_combined <- RunUMAP(object = stage_combined, reduction = "pca", dims = 1:20)
+stage_combined <- FindNeighbors(object = stage_combined, reduction = "pca", dims = 1:20)
+stage_combined <- FindClusters(stage_combined, resolution = 0.5)
+
+head(x = Idents(object = stage_combined), 10)
+
+```
+
+
+---
+
+
+---
+
+
+---
+
+
+---
+
+
+---
