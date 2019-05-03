@@ -65,6 +65,7 @@ library(devtools)
 library(Seurat)
 library(ggplot2)
 library(circlize)
+library(data.table)
 
 packageVersion("Seurat")
 
@@ -250,10 +251,10 @@ ly48 <- subset(x = ly48, subset = nFeature_RNA > 300 & nFeature_RNA < 6000)
 un <- NormalizeData(un, assay = NULL, normalization.method = "LogNormalize", 
                          scale.factor = 10000)
 
-hist(rowSums(un@data),
+hist(rowSums(un[["RNA"]]@data),
      breaks = 100, main = "Uninfected Sub Log Normalized: Expression sum by Feature",
      xlab = "Sum Expression")
-hist(colSums(un@data),
+hist(colSums(un[["RNA"]]@data),
      breaks = 100, main = "Uninfected Sub Log Normalized: Expression sum by Cell",
      xlab = "Sum Expression")
 
@@ -261,10 +262,10 @@ hist(colSums(un@data),
 lat <- NormalizeData(lat, assay = NULL, normalization.method = "LogNormalize", 
                          scale.factor = 10000)
 
-hist(rowSums(lat@data),
+hist(rowSums(lat[["RNA"]]@data),
      breaks = 100, main = "Latent Sub Log Normalized: Expression sum by Feature",
      xlab = "Sum Expression")
-hist(colSums(lat@data),
+hist(colSums(lat[["RNA"]]@data),
      breaks = 100, main = "Latent Sub Log Normalized: Expression sum by Cell",
      xlab = "Sum Expression")
 
@@ -272,10 +273,10 @@ hist(colSums(lat@data),
 ly20 <- NormalizeData(ly20, assay = NULL, normalization.method = "LogNormalize", 
                          scale.factor = 10000)
 
-hist(rowSums(ly20@data),
+hist(rowSums(ly20[["RNA"]]@data),
      breaks = 100, main = "LY20 Sub Log Normalized: Expression sum by Feature",
      xlab = "Sum Expression")
-hist(colSums(ly20),
+hist(colSums(ly20[["RNA"]]@data),
      breaks = 100, main = "LY20 Sub Log Normalized: Expression sum by Cell",
      xlab = "Sum Expression")
 
@@ -283,10 +284,10 @@ hist(colSums(ly20),
 ly48 <- NormalizeData(ly48, assay = NULL, normalization.method = "LogNormalize", 
                          scale.factor = 10000)
 
-hist(rowSums(ly48@data),
+hist(rowSums(ly48[["RNA"]]@data),
      breaks = 100, main = "LY48 Sub Log Normalized: Expression sum by Feature",
      xlab = "Sum Expression")
-hist(colSums(ly48@data),
+hist(colSums(ly48[["RNA"]]@data),
      breaks = 100, main = "LY48 Sub Log Normalized: Expression sum by Cell",
      xlab = "Sum Expression")
 
@@ -312,16 +313,16 @@ ly20_top10 <- head(x = VariableFeatures(object = ly20), 10)
 ly48_top10 <- head(x = VariableFeatures(object = ly48), 10)
 
 # Plot variable features with labels
-un_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = un_feat, 
+un_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = un, 
                                                        cols = c("black", "darkblue")), 
                             points = un_top10, repel = TRUE)
-lat_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = lat_feat, 
+lat_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = lat, 
                                                         cols = c("black", "darkred")), 
                             points = lat_top10, repel = TRUE)
-ly20_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = ly20_feat, 
+ly20_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = ly20, 
                                                          cols = c("black", "darkgoldenrod2")), 
                             points = ly20_top10, repel = TRUE)
-ly48_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = ly48_feat, 
+ly48_feat_plot <- LabelPoints(plot = VariableFeaturePlot(object = ly48, 
                                                          cols = c("black", "darkgreen")), 
                             points = ly48_top10, repel = TRUE)
 
@@ -351,7 +352,7 @@ DefaultAssay(object = stage_combined) <- "integrated"
 
 # Run the standard workflow for visualization and clustering
 stage_combined <- ScaleData(object = stage_combined, verbose = FALSE)
-stage_combined <- RunPCA(object = stage_combined, npcs = 30, verbose = FALSE)
+stage_combined <- RunPCA(object = stage_combined, npcs = 50, verbose = FALSE)
 
 ### Determining the Dimensionality of the dataset
 # How many PCs are optimal 
@@ -370,7 +371,7 @@ JackStrawPlot(object = stage_combined, dims = 1:20)
 ```{r}
 
 # t-SNE and Clustering
-stage_combined <- RunTSNE(object = stage_combined, dims = 1:20)
+stage_combined <- RunTSNE(object = stage_combined, reduction = "pca", dims = 1:20)
 stage_combined <- RunUMAP(object = stage_combined, reduction = "pca", dims = 1:20)
 stage_combined <- FindNeighbors(object = stage_combined, reduction = "pca", dims = 1:20)
 stage_combined <- FindClusters(stage_combined, resolution = 0.5)
@@ -380,16 +381,380 @@ head(x = Idents(object = stage_combined), 10)
 ```
 
 
+```{r}
+
+# Save object
+saveRDS(stage_combined, file = "./stage_integrated.rds")
+
+```
+
+
+```{r}
+
+# Read in object
+
+stage_combined <- readRDS(file = "./stage_integrated.rds")
+
+```
+
+
+```{r}
+
+# Visualizations
+
+# PCA
+pca_1 <- DimPlot(object = stage_combined, reduction = "pca", group.by = "stage")
+pca_2 <- DimPlot(object = stage_combined, reduction = "pca", label = TRUE)
+pca_3 <- DimPlot(object = stage_combined, reduction = "pca", split.by = "stage")
+pca_1
+pca_2
+pca_3
+
+# TSNE
+tsne_1 <- DimPlot(object = stage_combined, reduction = "tsne", group.by = "stage")
+tsne_2 <- DimPlot(object = stage_combined, reduction = "tsne", label = TRUE)
+tsne_3 <- DimPlot(object = stage_combined, reduction = "tsne", split.by = "stage")
+tsne_1
+tsne_2
+tsne_3
+
+# UMAP
+umap_1 <- DimPlot(object = stage_combined, reduction = "umap", group.by = "stage")
+umap_2 <- DimPlot(object = stage_combined, reduction = "umap", label = TRUE)
+umap_3 <- DimPlot(object = stage_combined, reduction = "umap", split.by = "stage")
+umap_1
+umap_2
+umap_3
+
+```
+
 ---
 
 
----
+```{r}
+
+# Find markers for each cluster
+
+# Only positive markers 
+clust_markers <- FindAllMarkers(object = stage_combined, only.pos = TRUE)
+clust_markers_10 <- clust_markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
+clust_markers_10
+
+write.table(clust_markers, file = "top10_cluster_markers.tsv", sep = "\t", quote = FALSE)
+
+```
+
+
+
+```{r}
+
+# Find conserved cell markers 
+DefaultAssay(object = stage_combined) <- "RNA"
+
+markers_0 <- FindConservedMarkers(object = stage_combined, ident.1 = 1,
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_0, n = 10)
+
+markers_1 <- FindConservedMarkers(object = stage_combined, ident.1 = 2, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_1, n = 10)
+
+markers_3 <- FindConservedMarkers(object = stage_combined, ident.1 = 4, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_3, n = 10)
+
+markers_4 <- FindConservedMarkers(object = stage_combined, ident.1 = 5, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_4, n = 10)
+
+markers_6 <- FindConservedMarkers(object = stage_combined, ident.1 = 7, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_6, n = 10)
+
+markers_7 <- FindConservedMarkers(object = stage_combined, ident.1 = 8, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_7, n = 10)
+
+markers_8 <- FindConservedMarkers(object = stage_combined, ident.1 = 9, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_8, n = 10)
+
+markers_9 <- FindConservedMarkers(object = stage_combined, ident.1 = 10, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_9, n = 10)
+
+markers_10 <- FindConservedMarkers(object = stage_combined, ident.1 = 11, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_10, n = 10)
+
+markers_11 <- FindConservedMarkers(object = stage_combined, ident.1 = 12, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_11, n = 10)
+
+markers_12 <- FindConservedMarkers(object = stage_combined, ident.1 = 13, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_12, n = 10)
+
+markers_13 <- FindConservedMarkers(object = stage_combined, ident.1 = 14, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_13, n = 10)
+
+markers_15 <- FindConservedMarkers(object = stage_combined, ident.1 = 16, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_15, n = 10)
+
+
+### Not found in all groups:
+
+
+### Latent isn't found in these clusters
+### Subset object, remove Latent
+
+stage_combined_sub_lat <- SubsetData(object = stage_combined, 
+                                 subset.name = "stage", 
+                                 accept.value = c("Uninfected", "LY20", "LY48"))
+
+markers_5 <- FindConservedMarkers(object = stage_combined_sub_lat, ident.1 = 6, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_5, n = 10) 
+
+markers_14 <- FindConservedMarkers(object = stage_combined_sub_lat, ident.1 = 15, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_14, n = 10) 
+
+# LY48 not found in these clusters & not enought cells in Uninfected
+stage_combined_sub_ly48 <- SubsetData(object = stage_combined, 
+                                 subset.name = "stage", 
+                                 accept.value = c("Latent", "LY20"))
+markers_17 <- FindConservedMarkers(object = stage_combined_sub_ly48, ident.1 = 18, 
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_17, n = 10)
+
+# Uninfected & Latent not found in these clusters
+stage_combined_sub_un_lat <- SubsetData(object = stage_combined, 
+                                 subset.name = "stage", 
+                                 accept.value = c("LY48", "LY20"))
+
+markers_2 <- FindConservedMarkers(object = stage_combined_sub_un_lat, ident.1 = 3,
+                                  grouping.var = "stage", 
+                                  verbose = FALSE)
+head(x = markers_2, n = 10) 
+
+
+# Not enough cells in this cluster
+#stage_combined_sub_ly20 <- SubsetData(object = stage_combined, 
+#                                 subset.name = "stage", 
+#                                 accept.value = c("LY20"))
+
+#markers_18 <- FindConservedMarkers(object = stage_combined_sub_ly20, ident.1 = 19, 
+#                                  grouping.var = "stage", 
+#                                  verbose = FALSE)
+#head(x = markers_18, n = 10) 
+
+#markers_16 <- FindConservedMarkers(object = stage_combined_sub_ly48_un, ident.1 = 17, 
+#                                  grouping.var = "stage", 
+#                                  verbose = FALSE)
+#head(x = markers_16, n = 10)
+
+```
 
 
 ---
 
 
+```{r}
+
+# All object clusters
+# Label for integration
+markers_0$cluster <- 0
+markers_1$cluster <- 1
+markers_3$cluster <- 3
+markers_4$cluster <- 4
+markers_6$cluster <- 6
+markers_7$cluster <- 7
+markers_8$cluster <- 8
+markers_9$cluster <- 9
+markers_10$cluster <- 10
+markers_11$cluster <- 11
+markers_12$cluster <- 12
+markers_13$cluster <- 13
+markers_15$cluster <- 15
+
+# Sub object clusters
+# Label for integration
+markers_2$cluster <- 2
+markers_5$cluster <- 5
+markers_14$cluster <- 14
+markers_17$cluster <- 17
+
+# Make row.names a genes column 
+
+markers_0 <- setDT(markers_0, keep.rownames = "gene")[]
+markers_1 <- setDT(markers_1, keep.rownames = "gene")[]
+markers_2 <- setDT(markers_2, keep.rownames = "gene")[]
+markers_3 <- setDT(markers_3, keep.rownames = "gene")[]
+markers_4 <- setDT(markers_4, keep.rownames = "gene")[]
+markers_5 <- setDT(markers_5, keep.rownames = "gene")[]
+markers_6 <- setDT(markers_6, keep.rownames = "gene")[]
+markers_7 <- setDT(markers_7, keep.rownames = "gene")[]
+markers_8 <- setDT(markers_8, keep.rownames = "gene")[]
+markers_9 <- setDT(markers_9, keep.rownames = "gene")[]
+markers_10 <- setDT(markers_10, keep.rownames = "gene")[]
+markers_11 <- setDT(markers_11, keep.rownames = "gene")[]
+markers_12 <- setDT(markers_12, keep.rownames = "gene")[]
+markers_13 <- setDT(markers_13, keep.rownames = "gene")[]
+markers_14 <- setDT(markers_14, keep.rownames = "gene")[]
+markers_15 <- setDT(markers_15, keep.rownames = "gene")[]
+markers_17 <- setDT(markers_17, keep.rownames = "gene")[]
+
+# Change genes to uppercase
+markers_0$gene <- toupper(markers_0$gene)
+markers_1$gene <- toupper(markers_1$gene)
+markers_2$gene <- toupper(markers_2$gene)
+markers_3$gene <- toupper(markers_3$gene)
+markers_4$gene <- toupper(markers_4$gene)
+markers_5$gene <- toupper(markers_5$gene)
+markers_6$gene <- toupper(markers_6$gene)
+markers_7$gene <- toupper(markers_7$gene)
+markers_8$gene <- toupper(markers_8$gene)
+markers_9$gene <- toupper(markers_9$gene)
+markers_10$gene <- toupper(markers_10$gene)
+markers_11$gene <- toupper(markers_11$gene)
+markers_12$gene <- toupper(markers_12$gene)
+markers_13$gene <- toupper(markers_13$gene)
+markers_14$gene <- toupper(markers_14$gene)
+markers_15$gene <- toupper(markers_15$gene)
+markers_17$gene <- toupper(markers_17$gene)
+
+
+### Add extra columns to subsetted objects
+colnames(markers_0)
+names <- c("gene", "Latent_p_val", "Latent_avg_logFC", "Latent_pct.1", "Latent_pct.2", "Latent_p_val_adj", "Uninfected_p_val", "Uninfected_avg_logFC", "Uninfected_pct.1", "Uninfected_pct.2", "Uninfected_p_val_adj", "LY48_p_val", "LY48_avg_logFC", "LY48_pct.1", "LY48_pct.2", "LY48_p_val_adj", "LY20_p_val", "LY20_avg_logFC", "LY20_pct.1", "LY20_pct.2", "LY20_p_val_adj", "max_pval", "minimump_p_val", "cluster")
+
+markers_2$Latent_p_val <- NA
+markers_2$Latent_avg_logFC <- NA
+markers_2$Latent_pct.1 <- NA
+markers_2$Latent_pct.2 <- NA
+markers_2$Latent_p_val_adj <- NA
+markers_2$Uninfected_p_val <- NA
+markers_2$Uninfected_avg_logFC <- NA
+markers_2$Uninfected_pct.1 <- NA
+markers_2$Uninfected_pct.2 <- NA
+markers_2$Uninfected_p_val_adj <- NA
+
+markers_2 <- dplyr::select(markers_2, gene, Latent_p_val, Latent_avg_logFC, Latent_pct.1, Latent_pct.2, Latent_p_val_adj, Uninfected_p_val, Uninfected_avg_logFC, Uninfected_pct.1, Uninfected_pct.2, Uninfected_p_val_adj, LY48_p_val, LY48_avg_logFC, LY48_pct.1, LY48_pct.2, LY48_p_val_adj, LY20_p_val, LY20_avg_logFC, LY20_pct.1, LY20_pct.2, LY20_p_val_adj, max_pval, minimump_p_val, cluster)
+
+markers_5$Latent_p_val <- NA
+markers_5$Latent_avg_logFC <- NA
+markers_5$Latent_pct.1 <- NA
+markers_5$Latent_pct.2 <- NA
+markers_5$Latent_p_val_adj <- NA
+
+markers_5 <- dplyr::select(markers_5, gene, Latent_p_val, Latent_avg_logFC, Latent_pct.1, Latent_pct.2, Latent_p_val_adj, Uninfected_p_val, Uninfected_avg_logFC, Uninfected_pct.1, Uninfected_pct.2, Uninfected_p_val_adj, LY48_p_val, LY48_avg_logFC, LY48_pct.1, LY48_pct.2, LY48_p_val_adj, LY20_p_val, LY20_avg_logFC, LY20_pct.1, LY20_pct.2, LY20_p_val_adj, max_pval, minimump_p_val, cluster)
+
+markers_14$Latent_p_val <- NA
+markers_14$Latent_avg_logFC <- NA
+markers_14$Latent_pct.1 <- NA
+markers_14$Latent_pct.2 <- NA
+markers_14$Latent_p_val_adj <- NA
+
+markers_14 <- dplyr::select(markers_14, gene, Latent_p_val, Latent_avg_logFC, Latent_pct.1, Latent_pct.2, Latent_p_val_adj, Uninfected_p_val, Uninfected_avg_logFC, Uninfected_pct.1, Uninfected_pct.2, Uninfected_p_val_adj, LY48_p_val, LY48_avg_logFC, LY48_pct.1, LY48_pct.2, LY48_p_val_adj, LY20_p_val, LY20_avg_logFC, LY20_pct.1, LY20_pct.2, LY20_p_val_adj, max_pval, minimump_p_val, cluster)
+
+markers_17$Uninfected_p_val <- NA
+markers_17$Uninfected_avg_logFC <- NA
+markers_17$Uninfected_pct.1 <- NA
+markers_17$Uninfected_pct.2 <- NA
+markers_17$Uninfected_p_val_adj <- NA
+markers_17$LY48_p_val <- NA
+markers_17$LY48_avg_logFC <- NA
+markers_17$LY48_pct.1 <- NA
+markers_17$LY48_pct.2 <- NA
+markers_17$LY48_p_val_adj <- NA
+
+markers_17 <- dplyr::select(markers_17, gene, Latent_p_val, Latent_avg_logFC, Latent_pct.1, Latent_pct.2, Latent_p_val_adj, Uninfected_p_val, Uninfected_avg_logFC, Uninfected_pct.1, Uninfected_pct.2, Uninfected_p_val_adj, LY48_p_val, LY48_avg_logFC, LY48_pct.1, LY48_pct.2, LY48_p_val_adj, LY20_p_val, LY20_avg_logFC, LY20_pct.1, LY20_pct.2, LY20_p_val_adj, max_pval, minimump_p_val, cluster)
+
+
+# Creat all cluster data frame
+all_cluster <- do.call("rbind", list(markers_0, markers_1, markers_2, markers_3, markers_4, 
+                                     markers_5, markers_6, markers_7, markers_8, markers_9, 
+                                     markers_10, markers_11, markers_12, markers_13, markers_14, 
+                                     markers_15, markers_17))
+
+# Read in curated cell classifier data frame
+cell_class <- read_csv("cell_classifier.csv", col_names = FALSE)
+colnames(cell_class)[1:2] <- c("cell_type", "gene")
+cell_class <- dplyr::select(cell_class, cell_type, gene)
+
+cell_class
+
+# Intersect cluster dataframes with cell classifier dataframe 
+
+cell_class_cluster <- inner_join(all_cluster, cell_class, by = "gene")
+cell_class_cluster
+
+
+
+```
+
+
+```{r}
+
+# Write out tables 
+
+write.table(cell_class_cluster, file = "cell_class_cluster.tsv", sep = "\t", quote = FALSE)
+write.table(all_cluster, file = "all_cluster.tsv", sep = "\t", quote = FALSE)
+
+```
+
+
 ---
+
+find markers results:
+
+The results data frame has the following columns :
+p_val : p_val (unadjusted)
+avg_logFC : log fold-chage of the average expression between the two groups. Positive values indicate that the gene is more highly expressed in the first group.
+pct.1 : The percentage of cells where the gene is detected in the first group
+pct.2 : The percentage of cells where the gene is detected in the second group
+p_val_adj : Adjusted p-value, based on bonferroni correction using all genes in the dataset.
+
+---
+
+# Also to subset by gene...
+https://github.com/satijalab/seurat/issues/349
+
+
+---
+
+
+
+---
+
+```{r}
+
+#FeaturePlot(object = immune.combined, features = c("Pcsk1n", "Bex2", "Lgals1", "Fth1",), min.cutoff = "q9")
+
+```
+
+
+---
+
 
 
 ---
