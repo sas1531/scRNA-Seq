@@ -339,8 +339,8 @@ ly48_feat_plot
 # Integrate the four datasets 
 
 # Identify anchors to integrate the 4 datasets 
-stage_anchors <- FindIntegrationAnchors(object.list = list(un, lat, ly20, ly48), dims = 1:20)
-stage_combined <- IntegrateData(anchorset = stage_anchors, dims = 1:20)
+stage_anchors <- FindIntegrationAnchors(object.list = list(un, lat, ly20, ly48), dims = 1:50)
+stage_combined <- IntegrateData(anchorset = stage_anchors, dims = 1:50)
 
 # Label assay
 DefaultAssay(object = stage_combined) <- "integrated"
@@ -371,10 +371,10 @@ JackStrawPlot(object = stage_combined, dims = 1:20)
 ```{r}
 
 # t-SNE and Clustering
-stage_combined <- RunTSNE(object = stage_combined, reduction = "pca", dims = 1:20)
-stage_combined <- RunUMAP(object = stage_combined, reduction = "pca", dims = 1:20)
-stage_combined <- FindNeighbors(object = stage_combined, reduction = "pca", dims = 1:20)
-stage_combined <- FindClusters(stage_combined, resolution = 0.5)
+stage_combined <- RunTSNE(object = stage_combined, reduction = "pca", dims = 1:10) # was 20
+stage_combined <- RunUMAP(object = stage_combined, reduction = "pca", dims = 1:10) # was 20
+stage_combined <- FindNeighbors(object = stage_combined, reduction = "pca", dims = 1:10) # was 20
+stage_combined <- FindClusters(stage_combined, resolution = 0.2) # was 0.5 (decreasing this decreases number of clusters)
 
 head(x = Idents(object = stage_combined), 10)
 
@@ -428,7 +428,17 @@ umap_3
 
 ```
 
----
+----
+
+
+https://learn.gencore.bio.nyu.edu/single-cell-rnaseq/seurat-part-4-cell-clustering/
+
+Compare genes in groups that are visually by each other in tsne 
+
+
+
+
+----
 
 
 ```{r}
@@ -440,10 +450,29 @@ clust_markers <- FindAllMarkers(object = stage_combined, only.pos = TRUE)
 clust_markers_10 <- clust_markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
 clust_markers_10
 
-write.table(clust_markers, file = "top10_cluster_markers.tsv", sep = "\t", quote = FALSE)
+write.table(clust_markers_10, file = "top10_cluster_markers.tsv", sep = "\t", quote = FALSE)
 
 ```
 
+
+```{r}
+
+### TEst top 10
+clust_markers_20_merge <- clust_markers_20
+
+clust_markers_20_merge$gene <- toupper(clust_markers_20_merge$gene)
+clust_markers_20_merge
+
+# Read in minimal cell classifier data frame 
+cell_class_min <- read_csv("cell_classifier_minimal.csv", col_names = FALSE)
+colnames(cell_class_min)[1:2] <- c("cell_type", "gene")
+cell_class_min <- dplyr::select(cell_class_min, cell_type, gene)
+
+# Intersect cluster dataframes with cell classifier minimal dataframe 
+cell_class_cluster_min <- inner_join(clust_markers_20_merge, cell_class, by = "gene")
+cell_class_cluster_min
+
+```
 
 
 ```{r}
@@ -451,128 +480,250 @@ write.table(clust_markers, file = "top10_cluster_markers.tsv", sep = "\t", quote
 # Find conserved cell markers 
 DefaultAssay(object = stage_combined) <- "RNA"
 
-markers_0 <- FindConservedMarkers(object = stage_combined, ident.1 = 1,
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_0, n = 10)
-
-markers_1 <- FindConservedMarkers(object = stage_combined, ident.1 = 2, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_1, n = 10)
-
-markers_3 <- FindConservedMarkers(object = stage_combined, ident.1 = 4, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_3, n = 10)
-
-markers_4 <- FindConservedMarkers(object = stage_combined, ident.1 = 5, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_4, n = 10)
-
-markers_6 <- FindConservedMarkers(object = stage_combined, ident.1 = 7, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_6, n = 10)
-
-markers_7 <- FindConservedMarkers(object = stage_combined, ident.1 = 8, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_7, n = 10)
-
-markers_8 <- FindConservedMarkers(object = stage_combined, ident.1 = 9, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_8, n = 10)
-
-markers_9 <- FindConservedMarkers(object = stage_combined, ident.1 = 10, 
+markers_9 <- FindConservedMarkers(object = stage_combined, ident.1 = 9,
                                   grouping.var = "stage", 
                                   verbose = FALSE)
 head(x = markers_9, n = 10)
+markers_9
 
-markers_10 <- FindConservedMarkers(object = stage_combined, ident.1 = 11, 
+
+markers_3 <- FindConservedMarkers(object = stage_combined, ident.1 = 3,
                                   grouping.var = "stage", 
                                   verbose = FALSE)
-head(x = markers_10, n = 10)
+head(x = markers_3, n = 10)
+markers_3
 
-markers_11 <- FindConservedMarkers(object = stage_combined, ident.1 = 12, 
+
+markers_7 <- FindConservedMarkers(object = stage_combined, ident.1 = 7,
                                   grouping.var = "stage", 
                                   verbose = FALSE)
-head(x = markers_11, n = 10)
+head(x = markers_7, n = 10)
+markers_7
 
-markers_12 <- FindConservedMarkers(object = stage_combined, ident.1 = 13, 
+
+markers_3_7 <- FindConservedMarkers(object = stage_combined, ident.1 = 3, ident.2 = 7,
                                   grouping.var = "stage", 
                                   verbose = FALSE)
-head(x = markers_12, n = 10)
+head(x = markers_3_7, n = 10)
+markers_3_7
 
-markers_13 <- FindConservedMarkers(object = stage_combined, ident.1 = 14, 
+# 6 Isn't found in Latent #
+markers_0_2_4_5 <- FindConservedMarkers(object = stage_combined, ident.1 = c(0,2,4,5),
+                                       ident.2 = c(1,3,7,8,9),
                                   grouping.var = "stage", 
                                   verbose = FALSE)
-head(x = markers_13, n = 10)
+head(x = markers_0_2_4_5, n = 10)
+markers_0_2_4_5
 
-markers_15 <- FindConservedMarkers(object = stage_combined, ident.1 = 16, 
+
+markers_2_8 <- FindConservedMarkers(object = stage_combined, ident.1 = c(2,8),
                                   grouping.var = "stage", 
                                   verbose = FALSE)
-head(x = markers_15, n = 10)
+head(x = markers_2_8, n = 10)
+markers_2_8
 
 
-### Not found in all groups:
-
-
-### Latent isn't found in these clusters
-### Subset object, remove Latent
-
-stage_combined_sub_lat <- SubsetData(object = stage_combined, 
-                                 subset.name = "stage", 
-                                 accept.value = c("Uninfected", "LY20", "LY48"))
-
-markers_5 <- FindConservedMarkers(object = stage_combined_sub_lat, ident.1 = 6, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_5, n = 10) 
-
-markers_14 <- FindConservedMarkers(object = stage_combined_sub_lat, ident.1 = 15, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_14, n = 10) 
-
-# LY48 not found in these clusters & not enought cells in Uninfected
-stage_combined_sub_ly48 <- SubsetData(object = stage_combined, 
-                                 subset.name = "stage", 
-                                 accept.value = c("Latent", "LY20"))
-markers_17 <- FindConservedMarkers(object = stage_combined_sub_ly48, ident.1 = 18, 
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_17, n = 10)
-
-# Uninfected & Latent not found in these clusters
-stage_combined_sub_un_lat <- SubsetData(object = stage_combined, 
-                                 subset.name = "stage", 
-                                 accept.value = c("LY48", "LY20"))
-
-markers_2 <- FindConservedMarkers(object = stage_combined_sub_un_lat, ident.1 = 3,
-                                  grouping.var = "stage", 
-                                  verbose = FALSE)
-head(x = markers_2, n = 10) 
-
-
-# Not enough cells in this cluster
-#stage_combined_sub_ly20 <- SubsetData(object = stage_combined, 
+## Example of subset:
+#stage_combined_sub_lat <- SubsetData(object = stage_combined, 
 #                                 subset.name = "stage", 
-#                                 accept.value = c("LY20"))
+#                                 accept.value = c("Uninfected", "LY20", "LY48"))
 
-#markers_18 <- FindConservedMarkers(object = stage_combined_sub_ly20, ident.1 = 19, 
-#                                  grouping.var = "stage", 
-#                                  verbose = FALSE)
-#head(x = markers_18, n = 10) 
 
-#markers_16 <- FindConservedMarkers(object = stage_combined_sub_ly48_un, ident.1 = 17, 
-#                                  grouping.var = "stage", 
-#                                  verbose = FALSE)
-#head(x = markers_16, n = 10)
 
 ```
+
+
+---
+
+```{r}
+
+# Re-categorize these
+
+markers_macrophage <- markers_3
+markers_schwann <- markers_7
+markers_cell_stress <- markers_9
+#markers_3_7
+markers_neuron <- markers_0_2_4_5 #Plus 6
+markers_satellite <- markers_2_8
+
+
+# View Data frames
+markers_macrophage
+markers_schwann
+markers_cell_stress
+markers_neuron
+markers_satellite
+
+# Write out these tables 
+write.table(markers_macrophage, file = "markers_macrophage.tsv", sep = "\t", quote = FALSE)
+write.table(markers_schwann, file = "markers_schwann.tsv", sep = "\t", quote = FALSE)
+write.table(markers_cell_stress, file = "markers_cell_stress.tsv", sep = "\t", quote = FALSE)
+write.table(markers_neuron, file = "markers_neuron.tsv", sep = "\t", quote = FALSE)
+write.table(markers_satellite, file = "markers_satellite.tsv", sep = "\t", quote = FALSE)
+
+```
+
+
+---
+
+Clustering (dims = 1:10, resolution = 0.2)
+
+•	Cluster 0 - Neuron
+         -	TUBB2A
+         -	TUBB2b
+         -	TUBB3
+         -	RESP18
+•	Cluster 1 - Neuron
+         -	GNG2
+         -	PCP4
+•	Cluster 2 - Satellite
+         -	SPARC
+•	Cluster 3 – Macrophage 
+         -	CD68 
+         -	CD53
+         -	PF4
+         -	AIF1
+         -	LYZ2
+         -	GPNMB
+•	Cluster 4 - Neuron
+         -	GNG2
+•	Cluster 5 – Neuron
+         -	Prph
+•	Cluster 6 – Neuron
+         -	RESP18
+         -	VGF
+         -	NPY
+•	Cluster 7 – Schwann Cells 
+         -	S100B
+         -	S0X10
+•	Cluster 8 - Satellite
+         -	SPARC
+•	Cluster 9 – Cell Stress
+         -	GADD45A
+         -	DDIT3
+         -	BBC3
+         -	PPP1R15A
+         -	CDKN1A
+
+---
+
+```{r}
+
+# Visualize Markers
+
+# Neurons
+FeaturePlot(object = stage_combined, 
+            features = c("Tubb3", "Gng2", "Prph","Vgf","Npy"),
+            min.cutoff = "q9")
+
+# Schwann Cells
+FeaturePlot(object = stage_combined, 
+            features = c("S100b", "Sox10"), 
+            min.cutoff = "q9")
+
+# Satellite Cells
+FeaturePlot(object = stage_combined, 
+            features = c("Sparc", "Igfbp7", "Col3a1"), 
+            min.cutoff = "q9")
+
+# Cell Stress is uniform but upregulated in cluster 9
+# Lets remove high levels of Ddit3 and Ppp1r15a
+FeaturePlot(object = stage_combined, 
+            features = c("Ddit3", "Ppp1r15a"), 
+            min.cutoff = "q9")
+
+# Macrophage 
+FeaturePlot(object = stage_combined, 
+            features = c("Cd68", "Cd53"), 
+            min.cutoff = "q9")
+
+
+## ALL
+all_features <- FeaturePlot(object = stage_combined,
+                            features = c("Tubb3", "Gng2", "Prph","Vgf","Npy",
+                         "S100b", "Sox10",
+                         "Sparc", "Igfbp7", "Col3a1",
+                         "Ddit3", "Ppp1r15a",
+                         "Cd68", "Cd53"),
+                         min.cutoff = "q9",
+                         label.size = 2,
+                         combine = FALSE) 
+
+for(i in 1:length(all_features)) {
+  all_features[[i]] <- all_features[[i]] + NoLegend() + NoAxes()
+}
+
+cowplot::plot_grid(plotlist = all_features)
+
+# Important Markers:
+
+### Neuron
+# Tubb3
+# Gng2
+# Prph
+# Vgf
+# Npy
+
+### Schwann
+# S100b
+# Sox10
+# Vim
+
+### Satellite Cells
+# Sparc
+# Igfbp7
+# Col3a1
+
+### Macrophage
+# Cd68
+# Cd53
+
+### Cell Stress
+# Ddit3
+# Ppp1r15a
+
+```
+
+
+---
+
+```{r}
+
+# Remove cells under cell stress (cluster 9)
+
+
+
+```
+
+
+---
+
+
+
+
+
+
+---
+
+
+
+
+
+
+
+---
+
+
+
+
+
+
+
+---
+
+
+
+
 
 
 ---
@@ -696,6 +847,8 @@ all_cluster <- do.call("rbind", list(markers_0, markers_1, markers_2, markers_3,
                                      markers_10, markers_11, markers_12, markers_13, markers_14, 
                                      markers_15, markers_17))
 
+all_cluster
+
 # Read in curated cell classifier data frame
 cell_class <- read_csv("cell_classifier.csv", col_names = FALSE)
 colnames(cell_class)[1:2] <- c("cell_type", "gene")
@@ -704,11 +857,22 @@ cell_class <- dplyr::select(cell_class, cell_type, gene)
 cell_class
 
 # Intersect cluster dataframes with cell classifier dataframe 
-
 cell_class_cluster <- inner_join(all_cluster, cell_class, by = "gene")
 cell_class_cluster
 
+View(cell_class_cluster)
 
+
+# Read in minimal cell classifier data frame 
+cell_class_min <- read_csv("cell_classifier_minimal.csv", col_names = FALSE)
+colnames(cell_class_min)[1:2] <- c("cell_type", "gene")
+cell_class_min <- dplyr::select(cell_class_min, cell_type, gene)
+
+# Intersect cluster dataframes with cell classifier minimal dataframe 
+cell_class_cluster_min <- inner_join(all_cluster, cell_class_min, by = "gene")
+cell_class_cluster_min
+
+View(cell_class_cluster_min)
 
 ```
 
@@ -718,9 +882,31 @@ cell_class_cluster
 # Write out tables 
 
 write.table(cell_class_cluster, file = "cell_class_cluster.tsv", sep = "\t", quote = FALSE)
+write.table(cell_class_cluster_min, file = "cell_class_cluster_minimal.tsv", sep = "\t", quote = FALSE)
 write.table(all_cluster, file = "all_cluster.tsv", sep = "\t", quote = FALSE)
 
 ```
+
+
+
+
+```{r}
+
+# Filter minimal dataframe for significance 
+
+
+# Characterize clusters 
+
+```
+
+
+
+---
+
+
+
+COMPARE ALL CLUSTERS THEN COMBINE
+
 
 
 ---
