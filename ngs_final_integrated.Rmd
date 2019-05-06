@@ -67,9 +67,11 @@ library(Seurat)
 library(ggplot2)
 library(circlize)
 library(data.table)
-library(cowplot)
+#library(cowplot)
 library(DESeq2)
 library(MAST)
+
+#detach("package:cowplot", unload=TRUE)
 
 packageVersion("Seurat")
 
@@ -392,7 +394,7 @@ head(x = Idents(object = stage_combined), 10)
 ```{r}
 
 # Save object
-saveRDS(stage_combined, file = "./stage_integrated_may_5.rds")
+#saveRDS(stage_combined, file = "./stage_integrated_may_5.rds")
 
 ```
 
@@ -403,7 +405,7 @@ saveRDS(stage_combined, file = "./stage_integrated_may_5.rds")
 
 stage_combined <- readRDS(file = "./stage_integrated.rds")
 
-head(Idents(stage_combined))
+#head(Idents(stage_combined))
 
 ```
 
@@ -584,16 +586,16 @@ markers_neuron_npy_neg
 markers_satellite
 
 # Write out these tables 
-write.table(markers_macrophage, file = "markers_macrophage.tsv", sep = "\t", quote = FALSE)
-write.table(markers_schwann, file = "markers_schwann.tsv", sep = "\t", quote = FALSE)
-write.table(markers_cell_stress, file = "markers_cell_stress.tsv", sep = "\t", quote = FALSE)
-write.table(markers_neuron_npy_pos, file = "markers_neuron_npy_pos.tsv", sep = "\t", quote = FALSE)
-write.table(markers_neuron_npy_neg, file = "markers_neuron_npy_neg.tsv", sep = "\t", quote = FALSE)
-write.table(markers_satellite, file = "markers_satellite.tsv", sep = "\t", quote = FALSE)
+#write.table(markers_macrophage, file = "markers_macrophage.tsv", sep = "\t", quote = FALSE)
+#write.table(markers_schwann, file = "markers_schwann.tsv", sep = "\t", quote = FALSE)
+#write.table(markers_cell_stress, file = "markers_cell_stress.tsv", sep = "\t", quote = FALSE)
+#write.table(markers_neuron_npy_pos, file = "markers_neuron_npy_pos.tsv", sep = "\t", quote = FALSE)
+#write.table(markers_neuron_npy_neg, file = "markers_neuron_npy_neg.tsv", sep = "\t", quote = FALSE)
+#write.table(markers_satellite, file = "markers_satellite.tsv", sep = "\t", quote = FALSE)
 
 
-neuron_temp <- read.table("./markers_neuron.tsv", sep = "\t")
-View(neuron_temp)
+macro_temp <- read.table("./markers_macrophage.tsv", sep = "\t")
+macro_temp
 
 ```
 
@@ -610,7 +612,7 @@ NPY- are pilomotor, secremotor, iridomotor, and thermogenic (Non-Vasoconstrictor
 VIP/RET/VACHT are Cholinergic Phenotype 
 
 
-•	Cluster 0 - NPY+ Neuron (Vasoconstrictor, )
+•	Cluster 0 - NPY+ Neuron
          -	TUBB2A
          -	TUBB2b
          -	TUBB3
@@ -644,6 +646,8 @@ VIP/RET/VACHT are Cholinergic Phenotype
          -	S0X10
 •	Cluster 8 - Satellite
          -	SPARC
+         -  Igfbp7 
+         -  Col3a1
 •	Cluster 9 – Cell Stress
          -	GADD45A
          -	DDIT3
@@ -984,8 +988,6 @@ Notes:
 
 ```{r}
 
-View(stage_combined)
-
 stage_combined$celltype_stage <- paste(Idents(object = stage_combined), stage_combined$stage, sep = "_")
 stage_combined$celltype <- Idents(object = stage_combined)
 Idents(stage_combined) <- "celltype_stage"
@@ -1003,60 +1005,62 @@ Idents(stage_combined)
 neuron_npy_pos_un_lat_markers <- FindMarkers(object = stage_combined, ident.1 = "NPY+ Neuron_Latent", 
                                              ident.2 = "NPY+ Neuron_Uninfected",
                                              verbose = FALSE, 
-                                             logfc.threshold = log(2), 
+                                             #logfc.threshold = log(2), 
                                              test.use = "wilcox")
 setDT(neuron_npy_pos_un_lat_markers, keep.rownames = TRUE)[]
 colnames(neuron_npy_pos_un_lat_markers)[1] <- c("gene")
-neuron_npy_pos_un_lat_markers <- filter(neuron_npy_pos_un_lat_markers, p_val_adj <= 0.01)
+#neuron_npy_pos_un_lat_markers <- filter(neuron_npy_pos_un_lat_markers, p_val_adj <= 0.01)
 
 # NPY- Neuron doesn't pass threshold
-#neuron_npy_neg_un_lat_markers <- FindMarkers(object = stage_combined, 
-#                                             ident.1 = "NPY- Neuron_Latent", 
-#                                             ident.2 = "NPY- Neuron_Uninfected",
-#                                             verbose = FALSE, 
-#                                             logfc.threshold = log(2), 
-#                                             test.use = "wilcox")
-#neuron_npy_neg_un_lat_markers
+neuron_npy_neg_un_lat_markers <- FindMarkers(object = stage_combined, 
+                                             ident.1 = "NPY- Neuron_Latent", 
+                                             ident.2 = "NPY- Neuron_Uninfected",
+                                             verbose = FALSE, 
+                                             #logfc.threshold = log(2), 
+                                             test.use = "wilcox")
+setDT(neuron_npy_neg_un_lat_markers, keep.rownames = TRUE)[]
+colnames(neuron_npy_neg_un_lat_markers)[1] <- c("gene")
+#neuron_npy_neg_un_lat_markers <- filter(neuron_npy_neg_un_lat_markers, p_val_adj <= 0.01)
 
 satellite_un_lat_markers <- FindMarkers(object = stage_combined, 
                                         ident.1 = "Satellite_Latent", 
                                         ident.2 = "Satellite_Uninfected",
                                         verbose = FALSE, 
-                                        logfc.threshold = log(2), 
+                                        #logfc.threshold = log(2), 
                                         test.use = "wilcox")
 setDT(satellite_un_lat_markers, keep.rownames = TRUE)[]
 colnames(satellite_un_lat_markers)[1] <- c("gene")
-satellite_un_lat_markers <- filter(satellite_un_lat_markers, p_val_adj <= 0.01)
+#satellite_un_lat_markers <- filter(satellite_un_lat_markers, p_val_adj <= 0.01)
 
 schwann_un_lat_markers <- FindMarkers(object = stage_combined, 
                                       ident.1 = "Schwann_Latent", 
                                       ident.2 = "Schwann_Uninfected",
                                       verbose = FALSE, 
-                                      logfc.threshold = log(2), 
+                                      #logfc.threshold = log(2), 
                                       test.use = "wilcox")
 setDT(schwann_un_lat_markers, keep.rownames = TRUE)[]
 colnames(schwann_un_lat_markers)[1] <- c("gene")
-schwann_un_lat_markers <- filter(schwann_un_lat_markers, p_val_adj <= 0.01)
+#schwann_un_lat_markers <- filter(schwann_un_lat_markers, p_val_adj <= 0.01)
 
 macro_un_lat_markers <- FindMarkers(object = stage_combined, 
                                     ident.1 = "Macrophage_Latent", 
                                     ident.2 = "Macrophage_Uninfected",
                                     verbose = FALSE, 
-                                    logfc.threshold = log(2), 
+                                    #logfc.threshold = log(2), 
                                     test.use = "wilcox")
 setDT(macro_un_lat_markers, keep.rownames = TRUE)[]
 colnames(macro_un_lat_markers)[1] <- c("gene")
-macro_un_lat_markers <- filter(macro_un_lat_markers, p_val_adj <= 0.01)
+#macro_un_lat_markers <- filter(macro_un_lat_markers, p_val_adj <= 0.01)
 
 stress_un_lat_markers <- FindMarkers(object = stage_combined, 
                                      ident.1 = "Stress+ Neuron_Latent", 
                                      ident.2 = "Stress+ Neuron_Uninfected",
                                      verbose = FALSE, 
-                                     logfc.threshold = log(2), 
+                                     #logfc.threshold = log(2), 
                                      test.use = "wilcox")
 setDT(stress_un_lat_markers, keep.rownames = TRUE)[]
 colnames(stress_un_lat_markers)[1] <- c("gene")
-stress_un_lat_markers <- filter(stress_un_lat_markers, p_val_adj <= 0.01)
+#stress_un_lat_markers <- filter(stress_un_lat_markers, p_val_adj <= 0.01)
 
 
 neuron_npy_pos_un_lat_markers #11
@@ -1075,61 +1079,61 @@ neuron_npy_pos_lat_ly20_markers <- FindMarkers(object = stage_combined,
                                                ident.1 = "NPY+ Neuron_LY20", 
                                                ident.2 = "NPY+ Neuron_Latent",
                                                verbose = FALSE,
-                                               logfc.threshold = log(2),
+                                               #logfc.threshold = log(2),
                                                test.use = "wilcox")
 setDT(neuron_npy_pos_lat_ly20_markers, keep.rownames = TRUE)[]
 colnames(neuron_npy_pos_lat_ly20_markers)[1] <- c("gene")
-neuron_npy_pos_lat_ly20_markers <- filter(neuron_npy_pos_lat_ly20_markers, p_val_adj <= 0.01)
+#neuron_npy_pos_lat_ly20_markers <- filter(neuron_npy_pos_lat_ly20_markers, p_val_adj <= 0.01)
 
 neuron_npy_neg_lat_ly20_markers <- FindMarkers(object = stage_combined, 
                                                ident.1 = "NPY- Neuron_LY20", 
                                                ident.2 = "NPY- Neuron_Latent",
                                                verbose = FALSE, 
-                                               logfc.threshold = log(2), 
+                                               #logfc.threshold = log(2), 
                                                test.use = "wilcox")
 setDT(neuron_npy_neg_lat_ly20_markers, keep.rownames = TRUE)[]
 colnames(neuron_npy_neg_lat_ly20_markers)[1] <- c("gene")
-neuron_npy_neg_lat_ly20_markers <- filter(neuron_npy_neg_lat_ly20_markers, p_val_adj <= 0.01)
+#neuron_npy_neg_lat_ly20_markers <- filter(neuron_npy_neg_lat_ly20_markers, p_val_adj <= 0.01)
 
 satellite_lat_ly20_markers <- FindMarkers(object = stage_combined, 
                                           ident.1 = "Satellite_LY20", 
                                           ident.2 = "Satellite_Latent",
                                           verbose = FALSE, 
-                                          logfc.threshold = log(2), 
+                                          #logfc.threshold = log(2), 
                                           test.use = "wilcox")
 setDT(satellite_lat_ly20_markers, keep.rownames = TRUE)[]
 colnames(satellite_lat_ly20_markers)[1] <- c("gene")
-satellite_lat_ly20_markers <- filter(satellite_lat_ly20_markers, p_val_adj <= 0.01)
+#satellite_lat_ly20_markers <- filter(satellite_lat_ly20_markers, p_val_adj <= 0.01)
 
 schwann_lat_ly20_markers <- FindMarkers(object = stage_combined, 
                                         ident.1 = "Schwann_LY20", 
                                         ident.2 = "Schwann_Latent", 
                                         verbose = FALSE, 
-                                        logfc.threshold = log(2), 
+                                        #logfc.threshold = log(2), 
                                         test.use = "wilcox")
 setDT(schwann_lat_ly20_markers, keep.rownames = TRUE)[]
 colnames(schwann_lat_ly20_markers)[1] <- c("gene")
-schwann_lat_ly20_markers <- filter(schwann_lat_ly20_markers, p_val_adj <= 0.01)
+#schwann_lat_ly20_markers <- filter(schwann_lat_ly20_markers, p_val_adj <= 0.01)
 
 macro_lat_ly20_markers <- FindMarkers(object = stage_combined, 
                                       ident.1 = "Macrophage_LY20", 
                                       ident.2 = "Macrophage_Latent",
                                       verbose = FALSE, 
-                                      logfc.threshold = log(2), 
+                                      #logfc.threshold = log(2), 
                                       test.use = "wilcox")
 setDT(macro_lat_ly20_markers, keep.rownames = TRUE)[]
 colnames(macro_lat_ly20_markers)[1] <- c("gene")
-macro_lat_ly20_markers <- filter(macro_lat_ly20_markers, p_val_adj <= 0.01)
+#macro_lat_ly20_markers <- filter(macro_lat_ly20_markers, p_val_adj <= 0.01)
 
 stress_lat_ly20_markers <- FindMarkers(object = stage_combined, 
                                        ident.1 = "Stress+ Neuron_LY20", 
                                        ident.2 = "Stress+ Neuron_Latent",
                                        verbose = FALSE, 
-                                       logfc.threshold = log(2), 
+                                       #logfc.threshold = log(2), 
                                        test.use = "wilcox")
 setDT(stress_lat_ly20_markers, keep.rownames = TRUE)[]
 colnames(stress_lat_ly20_markers)[1] <- c("gene")
-stress_lat_ly20_markers <- filter(stress_lat_ly20_markers, p_val_adj <= 0.01)
+#stress_lat_ly20_markers <- filter(stress_lat_ly20_markers, p_val_adj <= 0.01)
 
 
 neuron_npy_pos_lat_ly20_markers #25
@@ -1151,71 +1155,264 @@ neuron_npy_pos_ly48_ly20_markers <- FindMarkers(object = stage_combined,
                                                ident.1 = "NPY+ Neuron_LY48", 
                                                ident.2 = "NPY+ Neuron_LY20",
                                                verbose = FALSE, 
-                                               logfc.threshold = log(2),
+                                               #logfc.threshold = log(2),
                                                test.use = "wilcox")
 setDT(neuron_npy_pos_ly48_ly20_markers, keep.rownames = TRUE)[]
 colnames(neuron_npy_pos_ly48_ly20_markers)[1] <- c("gene")
-neuron_npy_pos_ly48_ly20_markers <- filter(neuron_npy_pos_ly48_ly20_markers, p_val_adj <= 0.01)
-neuron_npy_pos_ly48_ly20_markers
+#neuron_npy_pos_ly48_ly20_markers <- filter(neuron_npy_pos_ly48_ly20_markers, p_val_adj <= 0.01)
 
 neuron_npy_neg_ly48_ly20_markers <- FindMarkers(object = stage_combined, 
                                                ident.1 = "NPY- Neuron_LY48", 
                                                ident.2 = "NPY- Neuron_LY20",
                                                verbose = FALSE, 
-                                               logfc.threshold = log(2), 
+                                               #logfc.threshold = log(2), 
                                                test.use = "wilcox")
 setDT(neuron_npy_neg_ly48_ly20_markers, keep.rownames = TRUE)[]
 colnames(neuron_npy_neg_ly48_ly20_markers)[1] <- c("gene")
-neuron_npy_neg_ly48_ly20_markers <- filter(neuron_npy_neg_ly48_ly20_markers, p_val_adj <= 0.01)
-neuron_npy_neg_ly48_ly20_markers
+#neuron_npy_neg_ly48_ly20_markers <- filter(neuron_npy_neg_ly48_ly20_markers, p_val_adj <= 0.01)
 
 # Satellite doesn't pass threshold
-#satellite_ly48_ly20_markers <- FindMarkers(object = stage_combined, 
-#                                          ident.1 = "Satellite_LY48", 
-#                                          ident.2 = "Satellite_LY20",
-#                                          verbose = FALSE, 
-#                                          logfc.threshold = log(2), 
-#                                          test.use = "wilcox")
-#satellite_ly48_ly20_markers
+satellite_ly48_ly20_markers <- FindMarkers(object = stage_combined, 
+                                          ident.1 = "Satellite_LY48", 
+                                          ident.2 = "Satellite_LY20",
+                                          verbose = FALSE, 
+                                          #logfc.threshold = log(2), 
+                                          test.use = "wilcox")
+setDT(satellite_ly48_ly20_markers, keep.rownames = TRUE)[]
+colnames(satellite_ly48_ly20_markers)[1] <- c("gene")
+#satellite_ly48_ly20_markers <- filter(satellite_ly48_ly20_markers, p_val_adj <= 0.01)
+
 
 schwann_ly48_ly20_markers <- FindMarkers(object = stage_combined, 
                                         ident.1 = "Schwann_LY48", 
                                         ident.2 = "Schwann_LY20", 
                                         verbose = FALSE, 
-                                        logfc.threshold = log(2), 
+                                        #logfc.threshold = log(2), 
                                         test.use = "wilcox")
 setDT(schwann_ly48_ly20_markers, keep.rownames = TRUE)[]
 colnames(schwann_ly48_ly20_markers)[1] <- c("gene")
-schwann_ly48_ly20_markers <- filter(schwann_ly48_ly20_markers, p_val_adj <= 0.01)
-schwann_ly48_ly20_markers
+#schwann_ly48_ly20_markers <- filter(schwann_ly48_ly20_markers, p_val_adj <= 0.01)
 
 macro_ly48_ly20_markers <- FindMarkers(object = stage_combined, 
                                       ident.1 = "Macrophage_LY48", 
                                       ident.2 = "Macrophage_LY20",
                                       verbose = FALSE, 
-                                      logfc.threshold = log(2), 
+                                      #logfc.threshold = log(2), 
                                       test.use = "wilcox")
 setDT(macro_ly48_ly20_markers, keep.rownames = TRUE)[]
 colnames(macro_ly48_ly20_markers)[1] <- c("gene")
-macro_ly48_ly20_markers <- filter(macro_ly48_ly20_markers, p_val_adj <= 0.01)
-macro_ly48_ly20_markers
+#macro_ly48_ly20_markers <- filter(macro_ly48_ly20_markers, p_val_adj <= 0.01)
 
 stress_ly48_ly20_markers <- FindMarkers(object = stage_combined, 
                                        ident.1 = "Stress+ Neuron_LY48", 
                                        ident.2 = "Stress+ Neuron_LY20",
                                        verbose = FALSE, 
-                                       logfc.threshold = log(2), 
+                                       #logfc.threshold = log(2), 
                                        test.use = "wilcox")
 setDT(stress_ly48_ly20_markers, keep.rownames = TRUE)[]
 colnames(stress_ly48_ly20_markers)[1] <- c("gene")
-stress_ly48_ly20_markers <- filter(stress_ly48_ly20_markers, p_val_adj <= 0.01)
+#stress_ly48_ly20_markers <- filter(stress_ly48_ly20_markers, p_val_adj <= 0.01)
 
 
 neuron_npy_pos_ly48_ly20_markers #6
 neuron_npy_neg_ly48_ly20_markers #1
 schwann_ly48_ly20_markers #1
+satellite_ly48_ly20_markers
 macro_ly48_ly20_markers #5
 stress_ly48_ly20_markers #0
+
+```
+
+
+---
+
+```{r}
+
+# Create master differential expression dataframe for each stage comparison 
+# Create unfiltered dataframes:
+
+# Uninfected & Latent
+neuron_npy_pos_un_lat_markers$cell <- "NPY+ Neuron"
+neuron_npy_neg_un_lat_markers$cell <- "NPY- Neuron"
+schwann_un_lat_markers$cell <- "Schwann"
+satellite_un_lat_markers$cell <- "Satellite"
+macro_un_lat_markers$cell <- "Macrophage"
+stress_un_lat_markers$cell <- "Stress+ Neuron"
+
+un_lat <- do.call("rbind", list(neuron_npy_pos_un_lat_markers,
+                                neuron_npy_neg_un_lat_markers,
+                                schwann_un_lat_markers,
+                                satellite_un_lat_markers,
+                                macro_un_lat_markers,
+                                stress_un_lat_markers))
+un_lat
+
+# Latent & LY20
+neuron_npy_pos_lat_ly20_markers$cell <- "NPY+ Neuron"
+neuron_npy_neg_lat_ly20_markers$cell <- "NPY- Neuron"
+schwann_lat_ly20_markers$cell <- "Schwann"
+satellite_lat_ly20_markers$cell <- "Satellite"
+macro_lat_ly20_markers$cell <- "Macrophage"
+stress_lat_ly20_markers$cell <- "Stress+ Neuron"
+
+lat_ly20 <- do.call("rbind", list(neuron_npy_pos_lat_ly20_markers,
+                                neuron_npy_neg_lat_ly20_markers,
+                                schwann_lat_ly20_markers,
+                                satellite_lat_ly20_markers,
+                                macro_lat_ly20_markers,
+                                stress_lat_ly20_markers))
+lat_ly20
+
+# LY20 & LY48
+neuron_npy_pos_ly48_ly20_markers$cell <- "NPY+ Neuron"
+neuron_npy_neg_ly48_ly20_markers$cell <- "NPY- Neuron"
+schwann_ly48_ly20_markers$cell <- "Schwann"
+satellite_ly48_ly20_markers$cell <- "Satellite"
+macro_ly48_ly20_markers$cell <- "Macrophage"
+stress_ly48_ly20_markers$cell <- "Stress+ Neuron"
+
+ly48_ly20 <- do.call("rbind", list(neuron_npy_pos_ly48_ly20_markers,
+                                neuron_npy_neg_ly48_ly20_markers,
+                                schwann_ly48_ly20_markers,
+                                satellite_ly48_ly20_markers,
+                                macro_ly48_ly20_markers,
+                                stress_ly48_ly20_markers))
+ly48_ly20
+
+
+```
+
+
+---
+
+
+```{r}
+
+#### Volcano plots? with log -10(p_adjusted_value) on y axis and log2 average fold change on x axis 
+
+# Uninfected & Latent
+un_lat <- un_lat %>%
+  mutate(threshold = ifelse((avg_logFC >= 0 & p_val_adj < 0.01), "up_sig",
+                            ifelse((avg_logFC <= 0 & p_val_adj < 0.01) , 
+                                   "down_sig", "not_sig")))
+un_lat$threshold[is.na(un_lat$threshold)] <- "not_sig"
+
+un_lat_vol <- ggplot(un_lat, aes(x = avg_logFC, y = -log10(p_val_adj))) +
+  geom_point(aes(colour = threshold), size=1) +
+  ggtitle("Latent vs. Uninfected") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylim(0,50) + xlim(-2,2) +
+  scale_colour_manual(values=c("blue", "grey", "red3"), 
+                       name="Threshold 0.01",
+                       breaks=c("down_sig", "not_sig", "up_sig"),
+                       labels=c("Down", "None", "Up"))
+un_lat_vol
+
+# Latent & LY20
+lat_ly20 <- lat_ly20 %>%
+  mutate(threshold = ifelse((avg_logFC >= 0 & p_val_adj < 0.01), "up_sig",
+                            ifelse((avg_logFC <= 0 & p_val_adj < 0.01) , 
+                                   "down_sig", "not_sig")))
+lat_ly20$threshold[is.na(lat_ly20$threshold)] <- "not_sig"
+
+lat_ly20_vol <- ggplot(lat_ly20, aes(x = avg_logFC, y = -log10(p_val_adj))) +
+  geom_point(aes(colour = threshold), size=1) +
+  ggtitle("LY20 vs. Latent") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylim(0,50) + xlim(-2,2) +
+  scale_colour_manual(values=c("blue", "grey", "red3"), 
+                       name="Threshold 0.01",
+                       breaks=c("down_sig", "not_sig", "up_sig"),
+                       labels=c("Down", "None", "Up"))
+lat_ly20_vol
+
+# LY20 & LY48
+ly48_ly20 <- ly48_ly20 %>%
+  mutate(threshold = ifelse((avg_logFC >= 0 & p_val_adj < 0.01), "up_sig",
+                            ifelse((avg_logFC <= 0 & p_val_adj < 0.01) , 
+                                   "down_sig", "not_sig")))
+ly48_ly20$threshold[is.na(ly48_ly20$threshold)] <- "not_sig"
+
+ly48_ly20_vol <- ggplot(ly48_ly20, aes(x = avg_logFC, y = -log10(p_val_adj))) +
+  geom_point(aes(colour = threshold), size=1) +
+  ggtitle("LY48 vs. LY20") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ylim(0,50) + xlim(-2,2) +
+  scale_colour_manual(values=c("blue", "grey", "red3"), 
+                       name="Threshold 0.01",
+                       breaks=c("down_sig", "not_sig", "up_sig"),
+                       labels=c("Down", "None", "Up"))
+ly48_ly20_vol
+
+```
+
+
+```{r}
+
+# Create filtered dataframe:
+# Remove genes with average log fold change less than 2-fold
+# Remove gene with adjusted p value greater than 0.01
+un_lat <- un_lat[(un_lat$avg_logFC > log(2) | un_lat$avg_logFC < -log(2)) 
+                 & un_lat$p_val_adj < 0.01]
+
+lat_ly20 <- lat_ly20[(lat_ly20$avg_logFC > log(2) | lat_ly20$avg_logFC < -log(2)) 
+                     & lat_ly20$p_val_adj < 0.01]
+
+ly48_ly20 <- ly48_ly20[(ly48_ly20$avg_logFC > log(2) | ly48_ly20$avg_logFC < -log(2))
+                       & ly48_ly20$p_val_adj < 0.01]
+
+# This is what I will run the pathway analysis on 
+un_lat
+lat_ly20
+ly48_ly20
+
+# Write out dataframes
+write.table(un_lat, file = "uninfected_latent_sig_genes.txt", sep = "\t", quote = FALSE)
+write.table(lat_ly20, file = "latent_ly20_sig_genes.txt", sep = "\t", quote = FALSE)
+write.table(ly48_ly20, file = "ly20_ly48_sig_genes.txt", sep = "\t", quote = FALSE)
+
+```
+
+
+---
+
+
+
+```{r}
+
+# What proportion of cells are in each cluster? 
+
+# Get Frequency
+stage_freq <- as.data.frame(table(Idents(stage_combined)))
+
+
+# Get Stage total count (manually add)
+stage_freq$count <- c(rep(3435, 6), rep(2127, 6), rep(7850, 6), rep(5552, 6))
+
+# Get proportion
+stage_freq$prop <- (stage_freq$Freq/stage_freq$count)
+stage_freq
+
+# Split cell type and stage into two columns
+stage_freq <- separate(stage_freq, Var1, into=c("cell_type", "stage"), sep="_" )
+
+# Order by cell types
+stage_freq <- stage_freq[order(stage_freq$cell_type), ]
+
+# Write out frequency table
+write.table(stage_freq, file = "stage_cell_frequency_prop.txt", sep = "\t", quote = FALSE)
+
+# View
+stage_freq
+
+# Plot
+stage_freq_plot <- ggplot(data = stage_freq, 
+                          mapping = aes(x = stage, y = prop, col = cell_type, group = cell_type)) +
+  geom_point() + geom_line() + 
+  scale_x_discrete(limits=c("Uninfected","Latent","LY20", "LY48")) +
+  theme_grey()
+
+stage_freq_plot
 
 ```
 
@@ -1225,10 +1422,7 @@ stress_ly48_ly20_markers #0
 
 
 
-
-
 ---
-
 
 
 
@@ -1236,20 +1430,7 @@ stress_ly48_ly20_markers #0
 
 ---
 
-
-
-
-
-
----
-
-
-
-
-
-
-COMPARE ALL CLUSTERS THEN COMBINE
-
+Extra Notes:
 
 
 ---
@@ -1274,13 +1455,6 @@ https://github.com/satijalab/seurat/issues/349
 
 
 ---
-
-```{r}
-
-#FeaturePlot(object = immune.combined, features = c("Pcsk1n", "Bex2", "Lgals1", "Fth1",), min.cutoff = "q9")
-
-```
-
 
 ---
 
