@@ -65,11 +65,12 @@ library(Matrix)
 library(devtools)
 library(Seurat)
 library(ggplot2)
+library(ComplexHeatmap)
 library(circlize)
 library(data.table)
 #library(cowplot)
-library(DESeq2)
-library(MAST)
+#library(DESeq2)
+#library(MAST)
 
 #detach("package:cowplot", unload=TRUE)
 
@@ -424,21 +425,46 @@ pca_3
 
 # TSNE
 tsne_1 <- DimPlot(object = stage_combined, reduction = "tsne", group.by = "stage")
-tsne_2 <- DimPlot(object = stage_combined, reduction = "tsne", label = TRUE)
-tsne_3 <- DimPlot(object = stage_combined, reduction = "tsne", split.by = "stage")
+tsne_2 <- DimPlot(object = stage_combined, reduction = "tsne", label = TRUE,
+                       cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
+tsne_3 <- DimPlot(object = stage_combined, reduction = "tsne", split.by = "stage", 
+                  cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
 tsne_1
 tsne_2
 tsne_3
 
 # UMAP
 umap_1 <- DimPlot(object = stage_combined, reduction = "umap", group.by = "stage")
-umap_2 <- DimPlot(object = stage_combined, reduction = "umap", label = TRUE)
-umap_3 <- DimPlot(object = stage_combined, reduction = "umap", split.by = "stage")
+umap_2 <- DimPlot(object = stage_combined, reduction = "umap", label = TRUE,
+                   cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
+umap_3 <- DimPlot(object = stage_combined, reduction = "umap", split.by = "stage",
+                  cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
 umap_1
 umap_2
 umap_3
 
+
 ```
+
+```{r}
+
+# Save TSNE plots
+
+png("tsne_clusters.png", units="in", width=8, height=5, res=600)
+tsne_2
+dev.off()
+
+png("tsne_clusters_stage.png", units="in", width=8, height=5, res=600)
+tsne_3
+dev.off()
+
+
+```
+
 
 ----
 
@@ -462,7 +488,7 @@ clust_markers <- FindAllMarkers(object = stage_combined, only.pos = TRUE)
 clust_markers_10 <- clust_markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
 clust_markers_10
 
-write.table(clust_markers_10, file = "top10_cluster_markers.tsv", sep = "\t", quote = FALSE)
+#write.table(clust_markers_10, file = "top10_cluster_markers.tsv", sep = "\t", quote = FALSE)
 
 ```
 
@@ -700,19 +726,23 @@ FeaturePlot(object = stage_combined,
 ## ALL
 all_features <- FeaturePlot(object = stage_combined,
                             features = c("Tubb3", "Gng2", "Prph","Vgf","Npy",
-                         "S100b", "Sox10",
-                         "Sparc", "Igfbp7", "Col3a1",
-                         "Ddit3", "Ppp1r15a",
-                         "Cd68", "Cd53"),
-                         min.cutoff = "q9",
-                         label.size = 2,
-                         combine = FALSE) 
+                                         "S100b", "Sox10",
+                                         "Sparc", "Igfbp7", "Col3a1",
+                                         "Cd68", "Cd53"),
+                            min.cutoff = "q9",
+                            label.size = 2,
+                            combine = FALSE,
+                            reduction = "tsne",
+                            cols = c("gray85", "red2")) 
 
 for(i in 1:length(all_features)) {
   all_features[[i]] <- all_features[[i]] + NoLegend() + NoAxes()
 }
 
+# Save plot
+png("tsne_expression_markers.png", units="in", width=8, height=5, res=600)
 cowplot::plot_grid(plotlist = all_features)
+dev.off()
 
 # Important Markers:
 
@@ -760,11 +790,24 @@ cowplot::plot_grid(plotlist = all_features)
 ```{r}
 
 # Create expression plots for cell markers 
-VlnPlot(object = stage_combined, features = c("Tubb3", "Gng2", "Prph","Vgf","Npy"), pt.size = 0.01)
-VlnPlot(object = stage_combined, features = c("S100b", "Sox10"), pt.size = 0.01)
-VlnPlot(object = stage_combined, features = c("Sparc", "Igfbp7", "Col3a1"), pt.size = 0.01)
-VlnPlot(object = stage_combined, features = c("Cd68", "Cd53"), pt.size = 0.01)
-VlnPlot(object = stage_combined, features = c("Ddit3", "Ppp1r15a"), pt.size = 0.01)
+VlnPlot(object = stage_combined, features = c("Tubb3", "Gng2", "Prph"), pt.size = 0.001,
+                       cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
+VlnPlot(object = stage_combined, features = c("Vgf","Npy"), pt.size = 0.01,
+                       cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
+VlnPlot(object = stage_combined, features = c("S100b", "Sox10"), pt.size = 0.01,
+                       cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
+VlnPlot(object = stage_combined, features = c("Sparc", "Igfbp7", "Col3a1"), pt.size = 0.01,
+                       cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
+VlnPlot(object = stage_combined, features = c("Cd68", "Cd53"), pt.size = 0.01,
+                       cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
+VlnPlot(object = stage_combined, features = c("Ddit3", "Ppp1r15a"), pt.size = 0.01,
+                       cols = c("#FFAD0A", "#54BCD1","#C70E7B", "#A6E000", "#FF8C8D",
+                                "#F5D000", "#3C8C4D", "#EE4244", "#1BB6AF", "#0076BB"))
 
 
 ```
@@ -787,16 +830,29 @@ stage_combined <- RenameIdents(object = stage_combined,
 
 # Plots
 
-tsne_cell_1 <- DimPlot(object = stage_combined, reduction = "tsne", label = TRUE)
-tsne_cell_2 <- DimPlot(object = stage_combined, reduction = "tsne", split.by = "stage")
+tsne_cell_1 <- DimPlot(object = stage_combined, reduction = "tsne", label = TRUE,
+                       cols = c("#FFAD0A", "#54BCD1","#FF8C8D", "#A6E000" , "#0076BB", "#C70E7B"))
+tsne_cell_2 <- DimPlot(object = stage_combined, reduction = "tsne", split.by = "stage",
+                       cols = c("#FFAD0A", "#54BCD1","#FF8C8D", "#A6E000" , "#0076BB", "#C70E7B"))
 
-umap_cell_1 <- DimPlot(object = stage_combined, reduction = "umap", label = TRUE)
-umap_cell_2 <- DimPlot(object = stage_combined, reduction = "umap", split.by = "stage")
+umap_cell_1 <- DimPlot(object = stage_combined, reduction = "umap", label = TRUE,
+                       cols = c("#FFAD0A", "#54BCD1","#FF8C8D", "#A6E000" , "#0076BB", "#C70E7B"))
+umap_cell_2 <- DimPlot(object = stage_combined, reduction = "umap", split.by = "stage",
+                       cols = c("#FFAD0A", "#54BCD1","#FF8C8D", "#A6E000" , "#0076BB", "#C70E7B"))
 
 tsne_cell_1
 umap_cell_1
 tsne_cell_2
 umap_cell_2
+
+# Save figures
+png("tsne_cell_type.png", units="in", width=8, height=5, res=600)
+tsne_cell_1
+dev.off()
+
+png("umap_cell_type.png", units="in", width=8, height=5, res=600)
+umap_cell_1
+dev.off()
 
 ```
 
@@ -824,8 +880,8 @@ plot_markers <- c("Tubb3", "Gng2", "Prph","Vgf","Npy",
                   "Ddit3", "Ppp1r15a")
 
 DotPlot(object = stage_combined, features = plot_markers, 
-        cols = c("darkblue", "darkred", "darkgoldenrod2", "darkgreen"),
-        split.by = "stage", dot.min = 0.2) + RotatedAxis()
+        cols = c("#007BC3", "#D72000","#F7AA14", "#009F3F"),
+        split.by = "stage", dot.min = 0.2, dot.scale = 5) + RotatedAxis()
 
 ```
 
@@ -991,7 +1047,7 @@ Notes:
 stage_combined$celltype_stage <- paste(Idents(object = stage_combined), stage_combined$stage, sep = "_")
 stage_combined$celltype <- Idents(object = stage_combined)
 Idents(stage_combined) <- "celltype_stage"
-Idents(stage_combined)
+#Idents(stage_combined)
 
 ```
 
@@ -1301,7 +1357,7 @@ un_lat_vol <- ggplot(un_lat, aes(x = avg_logFC, y = -log10(p_val_adj))) +
   geom_point(aes(colour = threshold), size=1) +
   ggtitle("Latent vs. Uninfected") + 
   theme(plot.title = element_text(hjust = 0.5)) +
-  ylim(0,50) + xlim(-2,2) +
+  ylim(0,50) + xlim(-1.5,1.5) +
   scale_colour_manual(values=c("blue", "grey", "red3"), 
                        name="Threshold 0.01",
                        breaks=c("down_sig", "not_sig", "up_sig"),
@@ -1319,7 +1375,7 @@ lat_ly20_vol <- ggplot(lat_ly20, aes(x = avg_logFC, y = -log10(p_val_adj))) +
   geom_point(aes(colour = threshold), size=1) +
   ggtitle("LY20 vs. Latent") + 
   theme(plot.title = element_text(hjust = 0.5)) +
-  ylim(0,50) + xlim(-2,2) +
+  ylim(0,50) + xlim(-1.5,1.5) +
   scale_colour_manual(values=c("blue", "grey", "red3"), 
                        name="Threshold 0.01",
                        breaks=c("down_sig", "not_sig", "up_sig"),
@@ -1337,7 +1393,7 @@ ly48_ly20_vol <- ggplot(ly48_ly20, aes(x = avg_logFC, y = -log10(p_val_adj))) +
   geom_point(aes(colour = threshold), size=1) +
   ggtitle("LY48 vs. LY20") + 
   theme(plot.title = element_text(hjust = 0.5)) +
-  ylim(0,50) + xlim(-2,2) +
+  ylim(0,50) + xlim(-1.5,1.5) +
   scale_colour_manual(values=c("blue", "grey", "red3"), 
                        name="Threshold 0.01",
                        breaks=c("down_sig", "not_sig", "up_sig"),
@@ -1367,9 +1423,9 @@ lat_ly20
 ly48_ly20
 
 # Write out dataframes
-write.table(un_lat, file = "uninfected_latent_sig_genes.txt", sep = "\t", quote = FALSE)
-write.table(lat_ly20, file = "latent_ly20_sig_genes.txt", sep = "\t", quote = FALSE)
-write.table(ly48_ly20, file = "ly20_ly48_sig_genes.txt", sep = "\t", quote = FALSE)
+#write.table(un_lat, file = "uninfected_latent_sig_genes.txt", sep = "\t", quote = FALSE)
+#write.table(lat_ly20, file = "latent_ly20_sig_genes.txt", sep = "\t", quote = FALSE)
+#write.table(ly48_ly20, file = "ly20_ly48_sig_genes.txt", sep = "\t", quote = FALSE)
 
 ```
 
@@ -1400,7 +1456,7 @@ stage_freq <- separate(stage_freq, Var1, into=c("cell_type", "stage"), sep="_" )
 stage_freq <- stage_freq[order(stage_freq$cell_type), ]
 
 # Write out frequency table
-write.table(stage_freq, file = "stage_cell_frequency_prop.txt", sep = "\t", quote = FALSE)
+#write.table(stage_freq, file = "stage_cell_frequency_prop.txt", sep = "\t", quote = FALSE)
 
 # View
 stage_freq
@@ -1408,11 +1464,20 @@ stage_freq
 # Plot
 stage_freq_plot <- ggplot(data = stage_freq, 
                           mapping = aes(x = stage, y = prop, col = cell_type, group = cell_type)) +
-  geom_point() + geom_line() + 
+  geom_point() + geom_line() + xlab("Stage") + ylab("Proportion of Cells") +
   scale_x_discrete(limits=c("Uninfected","Latent","LY20", "LY48")) +
-  theme_grey()
+  theme_grey() + 
+  scale_color_manual(values=c("#FFAD0A", "#54BCD1","#FF8C8D", "#A6E000" , "#0076BB", "#C70E7B")) +
+  ggtitle("Cell Type Proportions by Stage") + theme(plot.title = element_text(hjust = 0.5)) +
+  labs(color='Cell Type') 
 
 stage_freq_plot
+
+png("stage_frequency_plot.png", units="in", width=8, height=5, res=600)
+stage_freq_plot
+dev.off()
+
+# Save plot
 
 ```
 
@@ -1420,6 +1485,450 @@ stage_freq_plot
 ---
 
 
+
+---
+
+```{r}
+
+# Import reactome results - label up and downregulaed
+
+un_lat_path_up <- read.delim("./reactome_pathway_human/un_lat_reactome_pathway_up_regulated_data.txt",
+                             sep = ",", header = TRUE)
+un_lat_path_down <- read.delim("./reactome_pathway_human/un_lat_reactome_pathway_down_regulated_data.txt",
+                             sep = ",", header = TRUE)
+
+
+lat_ly20_path_up <- read.delim("./reactome_pathway_human/latent_ly20_reactome_pathway_up_regulated_data.txt",
+                             sep = ",", header = TRUE)
+lat_ly20_path_down <- read.delim("./reactome_pathway_human/latent_ly20_reactome_pathway_down_regulated_data.txt",
+                             sep = ",", header = TRUE)
+
+ly20_ly48_path_up <- read.delim("./reactome_pathway_human/ly20_ly48_reactome_pathway_up_regulated_data.txt",
+                             sep = ",", header = TRUE)
+ly20_ly48_path_down <- read.delim("./reactome_pathway_human/ly20_ly48_reactome_pathway_down_regulated_data.txt",
+                             sep = ",", header = TRUE)
+
+# Rename columns
+colnames(un_lat_path_up)[] <- c("path_ident", "pathway", "found", "total",
+                              "ratio", "p_value", "fdr", "reactions_found",
+                              "reactions_total", "reactions_ratio", "species_ident",
+                              "species_name", "gene", "mapped_gene", "reaction_ident")
+colnames(un_lat_path_down)[] <- c("path_ident", "pathway", "found", "total",
+                              "ratio", "p_value", "fdr", "reactions_found",
+                              "reactions_total", "reactions_ratio", "species_ident",
+                              "species_name", "gene", "mapped_gene", "reaction_ident")
+colnames(lat_ly20_path_up)[] <- c("path_ident", "pathway", "found", "total",
+                              "ratio", "p_value", "fdr", "reactions_found",
+                              "reactions_total", "reactions_ratio", "species_ident",
+                              "species_name", "gene", "mapped_gene", "reaction_ident")
+colnames(lat_ly20_path_down)[] <- c("path_ident", "pathway", "found", "total",
+                              "ratio", "p_value", "fdr", "reactions_found",
+                              "reactions_total", "reactions_ratio", "species_ident",
+                              "species_name", "gene", "mapped_gene", "reaction_ident")
+colnames(ly20_ly48_path_up)[] <- c("path_ident", "pathway", "found", "total",
+                              "ratio", "p_value", "fdr", "reactions_found",
+                              "reactions_total", "reactions_ratio", "species_ident",
+                              "species_name", "gene", "mapped_gene", "reaction_ident")
+colnames(ly20_ly48_path_down)[] <- c("path_ident", "pathway", "found", "total",
+                              "ratio", "p_value", "fdr", "reactions_found",
+                              "reactions_total", "reactions_ratio", "species_ident",
+                              "species_name", "gene", "mapped_gene", "reaction_ident")
+
+# Add identifier columns (ex. un_lat and up regulated)
+un_lat_path_up$stage <- "Uninfected_Latent"
+un_lat_path_up$exp <- "Up"
+un_lat_path_down$stage <- "Uninfected_Latent"
+un_lat_path_down$exp <- "Down"
+
+lat_ly20_path_up$stage <- "Latent_LY20"
+lat_ly20_path_up$exp <- "Up"
+lat_ly20_path_down$stage <- "Latent_LY20"
+lat_ly20_path_down$exp <- "Down"
+
+ly20_ly48_path_up$stage <- "LY20_LY48"
+ly20_ly48_path_up$exp <- "Up"
+ly20_ly48_path_down$stage <- "LY20_LY48"
+ly20_ly48_path_down$exp <- "Down"
+
+
+# Select for necessary plotting columns
+#un_lat_path_up <- dplyr::select(un_lat_path_up, pat)
+
+
+un_lat_path_up
+un_lat_path_down
+lat_ly20_path_up
+lat_ly20_path_down
+ly20_ly48_path_up
+ly20_ly48_path_down
+
+```
+
+
+
+```{r}
+
+# Rbind pathway analysis results
+final_path_prelim <- do.call("rbind", list(un_lat_path_up,
+                                    un_lat_path_down,
+                                    lat_ly20_path_up,
+                                    lat_ly20_path_down,
+                                    ly20_ly48_path_up,
+                                    ly20_ly48_path_down))
+
+final_path_prelim
+
+levels(final_path_prelim$pathway)
+
+grep("immune", final_path_prelim$pathway, ignore.case=TRUE)
+
+
+```
+
+
+```{r}
+
+# Read in pathway conversion tables
+
+reactome_id <- read.delim("./reactome_pathway_human/ReactomePathwaysRelation.txt", header = FALSE)
+reactome_path <- read.delim("./reactome_pathway_human/ReactomePathways.txt", header = FALSE)
+
+colnames(reactome_id)[] <- c("parent_id", "path_ident")
+colnames(reactome_path)[] <- c("parent_id", "parent_pathway", "species")
+reactome_path <- reactome_path[reactome_path$species == "Homo sapiens" ,]
+reactome_path <- dplyr::select(reactome_path, parent_id, parent_pathway)
+
+reactome_id
+reactome_path
+
+```
+
+```{r}
+
+# Map dataframe to parent id
+final_path <- right_join(reactome_id, final_path_prelim, by = "path_ident")
+final_path
+
+# Map parent id to parent pathway
+final_path <- right_join(reactome_path, final_path, by = "parent_id")
+final_path
+
+# check levels
+unique(final_path$parent_pathway)
+
+```
+
+```{r}
+
+# Check groups for further collapse
+
+grep("hiv", final_path$parent_pathway, ignore.case = TRUE)
+grep("Transcription", final_path$parent_pathway, ignore.case = TRUE)
+grep("neuro", final_path$parent_pathway, ignore.case = TRUE)
+grep("gap junction", final_path$parent_pathway, ignore.case = TRUE)
+grep("influenza", final_path$parent_pathway, ignore.case = TRUE)
+grep("plasma", final_path$parent_pathway, ignore.case = TRUE)
+grep("transport", final_path$parent_pathway, ignore.case = TRUE)
+grep("signal", final_path$parent_pathway, ignore.case = TRUE)
+grep("traffic", final_path$parent_pathway, ignore.case = TRUE)
+grep("immune", final_path$parent_pathway, ignore.case = TRUE)
+grep("mitotic", final_path$parent_pathway, ignore.case = TRUE)
+grep("metabolism", final_path$parent_pathway, ignore.case = TRUE)
+
+
+```
+
+
+
+
+---
+
+
+
+
+
+
+---
+
+
+
+
+
+
+
+---
+
+
+```{r}
+
+# Create pathway figure dataframe ( 1 is up regualted, -1 is downregulated, 0 is na)
+
+path_fig_df <- final_path
+path_fig_df
+
+# Upregulated
+
+# Empty columns are hashed out
+path_fig_df$HIV_1 <- ifelse(grepl("HIV", path_fig_df$parent_pathway) == TRUE & 
+                            path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Development_1 <- ifelse(grepl("Development", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                      path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Metabolism_1 <- ifelse(grepl("Metabolism", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                   path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Gap_Junction_1 <- ifelse(grepl("Gap", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                     path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Trafficking_1 <- ifelse((grepl("traffic", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE) &
+                                  path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Transport_1 <- ifelse(grepl("transport", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                  path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Signalling_1 <- ifelse(grepl("Signaling", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                   path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Transcription_1 <- ifelse(grepl("Transcription", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                        grepl("HIV", path_fig_df$parent_pathway, ignore.case=TRUE) == FALSE &
+                            path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Neuron_1 <- ifelse((grepl("Neuro", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("synap", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("axon", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE) & 
+                                 path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Mitosis_1 <- ifelse(grepl("Mitotic", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                   path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Apoptosis_1 <- ifelse((grepl("Apoptosis", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("Apoptotic", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("death", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE) &
+                               path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Plasma_Membrane_1 <- ifelse((grepl("plasma", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                                        grepl("membrane", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE) &
+                                      path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Immune_1 <- ifelse(grepl("immune", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                      path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Influenza_1 <- ifelse(grepl("influenza", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                      path_fig_df$exp == "Up", 1, NA)
+
+
+# Downregulated 
+path_fig_df$HIV_2 <- ifelse(grepl("HIV", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                            path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Development_2 <- ifelse(grepl("developmental", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                      path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Metabolism_2 <- ifelse(grepl("metabolism", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                   path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Gap_Junction_2 <- ifelse(grepl("gap junction", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                     path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Trafficking_2 <- ifelse(grepl("traffic", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                  path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Transport_1 <- ifelse(grepl("transport", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                  path_fig_df$exp == "Up", 1, NA)
+path_fig_df$Signalling_2 <- ifelse(grepl("Signaling", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE & 
+                                   path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Transcription_2 <- ifelse(grepl("Transcription", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                        grepl("HIV", path_fig_df$parent_pathway, ignore.case=TRUE) == FALSE &
+                            path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Neuron_2 <- ifelse((grepl("Neuro", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("synap", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("axon", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE) & 
+                                 path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Mitosis_2 <- ifelse(grepl("Mitotic", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                   path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Apoptosis_2 <- ifelse((grepl("Apoptosis", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("Apoptotic", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                               grepl("death", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE) &
+                               path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Plasma_Membrane_2 <- ifelse((grepl("plasma", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE |
+                                        grepl("membrane", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE) &
+                                      path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Immune_2 <- ifelse(grepl("immune", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE  &
+                                 path_fig_df$exp == "Down", -1, NA)
+path_fig_df$Influenza_2 <- ifelse(grepl("influenza", path_fig_df$parent_pathway, ignore.case=TRUE) == TRUE &
+                                      path_fig_df$exp == "Down", -1, NA)
+
+
+# Combine up and downregulated
+path_fig_df$HIV <- coalesce(path_fig_df$HIV_2, path_fig_df$HIV_2)
+path_fig_df$Development <- coalesce(path_fig_df$Development_1, path_fig_df$Development_2)
+path_fig_df$Metabolism <- coalesce(path_fig_df$Metabolism_1, path_fig_df$Metabolism_2)
+path_fig_df$Gap_Junction <- coalesce(path_fig_df$Gap_Junction_1, path_fig_df$Gap_Junction_2)
+path_fig_df$Trafficking <- coalesce(path_fig_df$Trafficking_1, path_fig_df$Trafficking_2)
+path_fig_df$Transport <- coalesce(path_fig_df$Transport_1, path_fig_df$Transport_2)
+path_fig_df$Signalling <- coalesce(path_fig_df$Signalling_1, path_fig_df$Signalling_2)
+path_fig_df$Transcription <- coalesce(path_fig_df$Transcription_1, path_fig_df$Transcription_2)
+path_fig_df$Neuron <- coalesce(path_fig_df$Neuron_1, path_fig_df$Neuron_2)
+path_fig_df$Mitosis <- coalesce(path_fig_df$Mitosis_1, path_fig_df$Mitosis_2)
+path_fig_df$Apoptosis <- coalesce(path_fig_df$Apoptosis_1, path_fig_df$Apoptosis_2)
+path_fig_df$Plasma_Membrane <- coalesce(path_fig_df$Plasma_Membrane_1, path_fig_df$Plasma_Membrane_2)
+path_fig_df$Immune <- coalesce(path_fig_df$Immune_1, path_fig_df$Immune_2)
+
+
+
+# Fill NA with 0
+
+path_fig_df$HIV[is.na(path_fig_df$HIV)] <- 0
+path_fig_df$Development[is.na(path_fig_df$Development)] <- 0
+path_fig_df$Metabolism[is.na(path_fig_df$Metabolism)] <- 0
+path_fig_df$Gap_Junction[is.na(path_fig_df$Gap_Junction)] <- 0
+path_fig_df$Trafficking[is.na(path_fig_df$Trafficking)] <- 0
+path_fig_df$Transport[is.na(path_fig_df$Transport)] <- 0
+path_fig_df$Signalling[is.na(path_fig_df$Signalling)] <- 0
+path_fig_df$Transcription[is.na(path_fig_df$Transcription)] <- 0
+path_fig_df$Neuron[is.na(path_fig_df$Neuron)] <- 0
+path_fig_df$Mitosis[is.na(path_fig_df$Mitosis)] <- 0
+path_fig_df$Apoptosis[is.na(path_fig_df$Apoptosis)] <- 0
+path_fig_df$Plasma_Membrane[is.na(path_fig_df$Plasma_Membrane)] <- 0
+path_fig_df$Immune[is.na(path_fig_df$Immune)] <- 0
+
+path_fig_df
+
+
+# Other column up and down...
+path_fig_df$Other_1 <- ifelse((rowSums(path_fig_df[47:59]) == 0 & path_fig_df$exp == "Up"), 1, NA)
+path_fig_df$Other_2 <- ifelse((rowSums(path_fig_df[47:59]) == 0 & path_fig_df$exp == "Down"), -1 ,NA)
+path_fig_df$Other <- coalesce(path_fig_df$Other_1, path_fig_df$Other_2)
+path_fig_df$Other[is.na(path_fig_df$Other)] <- 0
+
+path_fig_df
+
+
+```
+
+
+```{r}
+
+# Select for figure columns
+path_fig_df_heat <- dplyr::select(path_fig_df, gene, stage, exp, HIV, Development,
+                                  Metabolism, Gap_Junction, Trafficking, Transport, Signalling,
+                                  Transcription, Neuron, Mitosis, Apoptosis, 
+                                  Plasma_Membrane, Immune, Other)
+
+# Add a row for every gene then aggregate by gene, stage, and regulation (up/down)
+path_fig_df_heat$gene <- as.character(path_fig_df_heat$gene)
+
+# Expand multi gene rows
+path_fig_df_heat <- path_fig_df_heat %>% 
+    mutate(gene = strsplit(as.character(gene), ";")) %>% 
+    unnest(gene)
+
+# check unique
+length(unique(path_fig_df_heat$gene))
+
+path_fig_df_heat
+
+# Aggregate and sum
+path_fig_df_heat <- aggregate(. ~ stage + exp + gene, path_fig_df_heat, sum)
+
+# Create unique ide
+path_fig_df_heat$regulation <- ifelse((path_fig_df_heat$exp == "Up"), "+", "-")
+path_fig_df_heat$id <- paste(path_fig_df_heat$gene, path_fig_df_heat$regulation, sep = "")
+
+# Get row annotation for heatmap from meta rows
+Stage <- path_fig_df_heat$stage
+
+# remove meta rows
+path_fig_df_heat <- dplyr::select(path_fig_df_heat, -gene, -exp, -regulation, -stage)
+path_fig_df_heat
+
+# Separate into meta data and identify rownames
+path_heat_meta <- dplyr::select(path_fig_df, stage, exp)
+path_heat_meta$regulation <- ifelse((path_heat_meta$exp == "Up"), "+", "-")
+path_heat_meta <- dplyr::select(path_heat_meta, -exp)
+path_heat_meta
+
+
+```
+
+
+
+```{r}
+
+# Make heatmap
+
+# Make genes rownames for heatmap
+path_fig_df_heat_gene <- path_fig_df_heat[,1:14]
+path_fig_df_heat_gene
+rownames(path_fig_df_heat_gene) <- path_fig_df_heat[,15]
+Pathway <- colnames(path_fig_df_heat_gene)
+
+path_fig_df_heat_gene
+
+
+# Top Annotation
+path_annotation <- HeatmapAnnotation(df = as.data.frame(Pathway),
+                                       col = list(Pathway = c(Other = "#F7E690",
+                                                              Transcription = "#F7AA14",
+                                                              HIV = "#EF7C12" ,
+                                                              Signalling = "#D72000" ,
+                                                              Neuron = "#B25D94",
+                                                              Mitosis = "#CB87B4",
+                                                              Trafficking = "#EFC7E6" ,
+                                                              Plasma_Membrane = "#AFDFEF",
+                                                              Metabolism = "#54BCD1",
+                                                              Immune = "#0076C0",
+                                                              Apoptosis = "#006400",
+                                                              Gap_Junction = "#2CB11B",
+                                                              Development = "#95C65C",
+                                                              Transport = "#BDDE9B")),
+                               annotation_legend_param = list(legend_height = unit(1, "cm"),
+                                                              title = "Pathway",
+                                                              legend_width = unit(0.20, "cm"),
+                                                              title_gp = gpar(fontsize = 11),
+                                                              labels_gp = gpar(fontsize = 9)))
+
+# Row Annotation - check documentation
+stage_annotation <- rowAnnotation(df = as.data.frame(Stage),
+                                  col = list(Stage = c(Uninfected_Latent = "#007BC3",
+                                                       Latent_LY20 = "#FFB90F",
+                                                       LY20_LY48 = "#2CB11B")),
+                               annotation_legend_param = list(legend_height = unit(1, "cm"),
+                                                              title = "Stage",
+                                                              legend_width = unit(0.20, "cm"),
+                                                              title_gp = gpar(fontsize = 11),
+                                                              labels_gp = gpar(fontsize = 9)))
+
+# Heatmap
+phos_heat_drug <- Heatmap(path_fig_df_heat_gene,
+                         top_annotation = path_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = T,
+                         cluster_columns = T,
+                         row_names_gp = gpar(fontsize = 7),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(1, "cm"),
+                                                     legend_width = unit(0.20, "cm"),
+                                                     title = "Pathway Count",
+                                                     title_gp = gpar(fontsize = 11),
+                                                     labels_gp = gpar(fontsize = 9)),
+                         col = colorRamp2(c(-5, 0, 5), 
+                                          c("blue", "gray90", "red")),
+                         row_title_gp = gpar(fontsize = 10),
+                         rect_gp = gpar(col = "white", lwd = 0.75))
+
+final_path_heatmap <- draw(stage_annotation + phos_heat_drug, heatmap_legend_side = "right")
+
+png("pathway_heatmap.png", units="in", width=8, height=5, res=600)
+final_path_heatmap
+dev.off()
+
+
+```
+
+
+
+
+---
+
+---
+
+
+To Do:
+
+Plot pathways using heatmap (red is upregulated, blue is down regulated, white is note present) and cluster by stage? import the dataframes for this. - you could also weight by p value (remember the reactome cuttoff is 0.05 not 0.01)
+
+Change all colors for dimplots, make it cohesive (la croix?)
+
+Change all colors and format for the frequency plots (and maybe volvano plots too)
+
+Save figures 
+
+Start report
 
 
 ---
