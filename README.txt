@@ -1,6 +1,4 @@
-## Helpful tutorials:
-
-https://broadinstitute.github.io/2019_scWorkshop/processing-scrnaseq-data.html 
+Single Cell RNA-Seq Analysis of Rat Gene Expression throughout HSV-1 Latency and Reactivation
 
 Input Files:
 I1 = Illumina Index (for sorting lanes - not needed here)
